@@ -63,6 +63,6 @@ fix kick all efield 0.0 0.0 $(2.0/lz) # 2.0 V for z axis
 fix f0 all wall/reflect zlo EDGE zhi EDGE # For boundary p p f
 #fix walls all wall/reflect zlo 0.0 zhi 40.0 units box # For boundary p p f
 
-run             100
+run             10
 
 #-------------------- End ----------------------------------------------------------------

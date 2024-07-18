@@ -5,19 +5,17 @@ Geometry = VaspFormat {
 #  <<< "geometry.gen"
 #}
 Driver = {}
-Hamiltonian = DFTB {
-  Scc = Yes
-  SccTolerance = 1e-5
+Hamiltonian = xTB {
+  Method = "GFN2-xTB"
+  SCC = Yes
+  SCCTolerance = 1.0E-5
   MaxSCCIterations = 1000
-  SlaterKosterFiles = Type2FileNames {
-    Prefix = "./mio-1-1/"
-    Separator = "-"
-    Suffix = ".skf"
-  }
-  MaxAngularMomentum {
-     O = "p"
-     C = "p"
-     H = "s"
+  Mixer = Broyden {
+    MixingParameter = 0.20
+    InverseJacobiWeight = 1.0E-2
+    MinimalWeight = 1.0
+    MaximalWeight = 100000.0
+    WeightFactor = 1.0E-2
   }
   KPointsAndWeights = SuperCellFolding {
 2 0 0

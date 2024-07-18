@@ -1,0 +1,120 @@
+LAMMPS (29 Sep 2021)
+#-----------------------------------------------------------------------------------------
+# The two p-Coumryl_alcohol in water for use with DFTB+ using electric field on lammps
+# test: lammps-stable_29Sep2021
+#-------------------- Initialization -----------------------------------------------------
+clear
+echo            both    # echoes each input script command to both log file and screen
+#package         omp 1   # of OpenMP threads: export OMP_NUM_THREADS=16 (need: yes-OPENMP)
+#-----------------------------------------------------------------------------------------
+variable        mode index file
+
+if "${mode} == file" then   "message client md file tmp.couple" elif "${mode} == zmq"   "message client md zmq localhost:8888"
+message client md file tmp.couple
+# Note: General Web (localhost:80), Secure HTTPS (localhost:443), Develop. XAMPP (localhost:8888), Develop. Web (localhost:5555)
+#-----------------------------------------------------------------------------------------
+units           metal
+dimension       3
+boundary        p p f  # for wall/reflect (add electric field at z axis) (Note: f is dummy for DFTB+)
+atom_style      charge
+atom_modify     sort 0 0.0 map yes
+
+#-----------------------------------------------------------------------------------------
+variable Tini equal 273+25.0 # [K] (Initial temperature)
+variable Tfin equal 273+85.0 # [K] (Annealing temperature)
+
+variable Nout equal 1 # every 1 time steps to the specified file
+
+#-------------------- Atom & Lattice description ----------------------------------------
+read_data data.lammps
+Reading data file ...
+  orthogonal box = (0.0000000 0.0000000 0.0000000) to (20.000000 20.000000 40.000000)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  582 atoms
+  read_data CPU = 0.011 seconds
+
+variable elem string "C O H" # specifies the potential file used
+
+mass 3 2.00 # H => D (Make the hydrogen heavier to increase the timestep)
+
+#-------------------- Settings -----------------------------------------------------------
+reset_timestep 0
+
+timestep        0.0005 # 0.5 [fs] (Recommend 0.1-0.5 [fs]), sets the timestep for subsequent simulations
+
+velocity        all create ${Tini} 123456 loop geom # sets the velocity of a group of atoms
+velocity        all create 298 123456 loop geom 
+
+#neighbor        0.3 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
+#neigh_modify    delay 0 every 10 check no
+comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
+
+thermo          ${Nout} # computes and prints thermodynamic
+thermo          1 
+thermo_style custom step temp pe etotal press vol density # specifies content of thermodynamic data to be printed in screen
+
+dump            d1 all cfg ${Nout} cfg/run.*.cfg mass type xs ys zs id type q
+dump            d1 all cfg 1 cfg/run.*.cfg mass type xs ys zs id type q
+dump_modify     d1 element ${elem}
+dump_modify     d1 element C O H
+
+#-------------------- Run the simulation -------------------------------------------------
+# Non-Equilibrium system, calculation settings
+fix             f1 all nve
+fix             f2 all client/md
+fix_modify      f2 energy yes # or 2 virial yes
+fix             f3 all langevin  ${Tini} ${Tfin} $(15*dt) 123456
+fix             f3 all langevin  298 ${Tfin} $(15*dt) 123456
+fix             f3 all langevin  298 358 $(15*dt) 123456
+fix             f3 all langevin  298 358 0.0074999999999999997224 123456
+
+# E-field component values (electric field units) (electric field = volts/Angstrom)
+fix kick all efield 0.0 0.0 $(2.0/lz) # 2.0 V for z axis
+fix kick all efield 0.0 0.0 0.050000000000000002776 
+fix f0 all wall/reflect zlo EDGE zhi EDGE # For boundary p p f
+#fix walls all wall/reflect zlo 0.0 zhi 40.0 units box # For boundary p p f
+
+run             10
+Per MPI rank memory allocation (min/avg/max) = 3.708 | 3.708 | 3.708 Mbytes
+Step Temp PotEng TotEng Press Volume Density 
+       0          298   -977.27296   -954.89312    1493.9501        16000   0.40684057 
+       1    286.81653   -977.26358   -955.72362    1437.8821        16000   0.40684057 
+       2    293.10847   -977.23481   -955.22233    1469.4269        16000   0.40684057 
+       3    293.29922   -977.18385   -955.15704    1470.3831        16000   0.40684057 
+       4     289.8271   -977.12271   -955.35665    1452.9758        16000   0.40684057 
+       5     292.0316   -977.04943   -955.11781    1464.0282        16000   0.40684057 
+       6    293.92956   -976.96496   -954.89081    1473.5442        16000   0.40684057 
+       7    299.12058   -976.87107   -954.40707    1499.5701        16000   0.40684057 
+       8    308.18356   -976.76769   -953.62306    1545.0081        16000   0.40684057 
+       9    308.34924   -976.64873   -953.49166    1545.8396        16000   0.40684057 
+      10    309.13269   -976.52683   -953.31092    1549.7685        16000   0.40684057 
+Loop time of 370.605 on 1 procs for 10 steps with 582 atoms
+
+Performance: 0.001 ns/day, 20589.142 hours/ns, 0.027 timesteps/s
+0.0% CPU use with 1 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 3.3091e-05 | 3.3091e-05 | 3.3091e-05 |   0.0 |  0.00
+Output  | 0.040627   | 0.040627   | 0.040627   |   0.0 |  0.01
+Modify  | 370.56     | 370.56     | 370.56     |   0.0 | 99.99
+Other   |            | 3.208e-05  |            |       |  0.00
+
+Nlocal:        582.000 ave         582 max         582 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        186.000 ave         186 max         186 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:         0.00000 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0.0000000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+#-------------------- End ----------------------------------------------------------------
+Total wall time: 0:07:04
