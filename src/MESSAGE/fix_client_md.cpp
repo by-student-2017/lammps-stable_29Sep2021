@@ -35,7 +35,7 @@ using namespace FixConst;
 enum{OTHER,REAL,METAL};
 enum{SETUP=1,STEP};
 enum{DIM=1,PERIODICITY,ORIGIN,BOX,NATOMS,NTYPES,TYPES,COORDS,UNITS,CHARGE};
-enum{FORCES=1,ENERGY,PRESSURE,ERROR};
+enum{FORCES=1,ENERGY,PRESSURE,CHARGES,ERROR};
 
 /* ---------------------------------------------------------------------- */
 
@@ -302,8 +302,19 @@ void FixClientMD::receive_fev(int vflag)
       virial[i] = factor * v[i];
   }
 
+  double *charges = (double *) cs->unpack(CHARGES);
+  double *q = atom->q;
+  j = 0;
+  for (tagint id = 1; id <= natoms; id++) {
+    m = atom->map(id);
+    if (m < 0 || m >= nlocal) j += 1;
+    else {
+      q[m] = charges[j++];
+    }
+  }
+
   // error return
 
   server_error = 0;
-  if (nfield == 4) server_error = cs->unpack_int(ERROR);
+  if (nfield == 5) server_error = cs->unpack_int(ERROR);
 }

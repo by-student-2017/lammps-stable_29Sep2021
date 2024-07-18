@@ -1,0 +1,92 @@
+LAMMPS (29 Sep 2021)
+# small W unit cell for use with NWChem
+
+variable        mode index file
+
+if "${mode} == file" then   "message client md file tmp.couple" elif "${mode} == zmq"   "message client md zmq localhost:5555" # Note: General Web (localhost:80), Secure HTTPS (localhost:443), Develop. XAMPP (localhost:8888), Develop. Web (localhost:5555)
+message client md file tmp.couple
+
+variable	x index 1
+variable	y index 1
+variable	z index 1
+
+units           metal
+atom_style      charge
+atom_modify     sort 0 0.0 map yes
+
+read_data       data.W
+Reading data file ...
+  orthogonal box = (0.0000000 0.0000000 0.0000000) to (3.1600000 3.1600000 3.1600000)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  2 atoms
+  read_data CPU = 0.008 seconds
+
+mass            1 183.85
+
+replicate       $x $y $z
+replicate       1 $y $z
+replicate       1 1 $z
+replicate       1 1 1
+Replicating atoms ...
+  orthogonal box = (0.0000000 0.0000000 0.0000000) to (3.1600000 3.1600000 3.1600000)
+  1 by 1 by 1 MPI processor grid
+  2 atoms
+  replicate CPU = 0.000 seconds
+
+velocity        all create 300.0 87287 loop geom
+
+#neighbor        0.3 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
+#neigh_modify    delay 0 every 10 check no
+comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
+
+fix             1 all nve
+fix             2 all client/md
+fix_modify      2 energy yes
+
+dump            d1 all cfg 1 cfg/run.*.cfg mass type xs ys zs id type q
+dump_modify     d1 element W
+
+thermo          1
+run             10
+Per MPI rank memory allocation (min/avg/max) = 3.676 | 3.676 | 3.676 Mbytes
+Step Temp E_pair E_mol TotEng Press 
+       0          300            0            0   -549.75686     36815830 
+       1    298.92534            0            0   -549.75686     36815825 
+       2    295.74896            0            0   -549.75687     36814830 
+       3    290.54502            0            0   -549.75687     36811865 
+       4     283.3914            0            0   -549.75688     36807911 
+       5    274.38924            0            0   -549.75688     36802968 
+       6    263.65816            0            0   -549.75689     36798999 
+       7    251.34554            0            0   -549.75689     36793061 
+       8    237.62321            0            0    -549.7569     36786136 
+       9     222.6848            0            0    -549.7569     36779205 
+      10    206.73674            0            0    -549.7569     36772271 
+Loop time of 12.6395 on 1 procs for 10 steps with 2 atoms
+
+Performance: 0.068 ns/day, 351.098 hours/ns, 0.791 timesteps/s
+0.0% CPU use with 1 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 3.3364e-05 | 3.3364e-05 | 3.3364e-05 |   0.0 |  0.00
+Output  | 0.028325   | 0.028325   | 0.028325   |   0.0 |  0.22
+Modify  | 12.611     | 12.611     | 12.611     |   0.0 | 99.78
+Other   |            | 2.827e-05  |            |       |  0.00
+
+Nlocal:        2.00000 ave           2 max           2 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        33.0000 ave          33 max          33 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:         0.00000 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0.0000000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+Total wall time: 0:00:14

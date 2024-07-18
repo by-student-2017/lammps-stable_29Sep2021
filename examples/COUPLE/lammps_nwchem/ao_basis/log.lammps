@@ -1,0 +1,76 @@
+LAMMPS (29 Sep 2021)
+# H2O with NWChem
+
+variable        mode index file
+
+if "${mode} == file" then   "message client md file tmp.couple" elif "${mode} == zmq"   "message client md zmq localhost:5555" # Note: General Web (localhost:80), Secure HTTPS (localhost:443), Develop. XAMPP (localhost:8888), Develop. Web (localhost:5555)
+message client md file tmp.couple
+
+units           metal
+atom_style      charge
+atom_modify     sort 0 0.0 map yes
+
+boundary        m m m
+read_data       data.h2o
+Reading data file ...
+  orthogonal box = (-10.000000 -10.000000 -10.000000) to (10.000000 10.000000 10.000000)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  3 atoms
+  read_data CPU = 0.006 seconds
+
+velocity        all create 300.0 87287 loop geom
+
+#neighbor        0.3 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
+#neigh_modify    delay 0 every 10 check no
+comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
+
+fix             1 all nve
+fix             2 all client/md
+fix_modify      2 energy yes
+
+dump            d1 all cfg 1 cfg/run.*.cfg mass type xs ys zs id type q
+dump_modify     d1 element O H
+
+thermo          1
+run             10
+Per MPI rank memory allocation (min/avg/max) = 3.652 | 3.652 | 3.652 Mbytes
+Step Temp E_pair E_mol TotEng Press Volume 
+       0          300            0            0   -2068.2746    10.354878         8000 
+       1    200.33505            0            0   -2068.2704     6.914817         8000 
+       2    152.36594            0            0    -2068.269    5.2591027         8000 
+       3    227.41295            0            0   -2068.2722    7.8494447         8000 
+       4    265.38624            0            0    -2068.275    9.1601409         8000 
+       5    160.37834            0            0   -2068.2705    5.5356608         8000 
+       6    122.98065            0            0   -2068.2679    4.2448323         8000 
+       7    247.57054            0            0   -2068.2742    8.5452095         8000 
+       8    280.72089            0            0   -2068.2743    9.6894355         8000 
+       9    182.95968            0            0     -2068.27    6.3150842         8000 
+      10    155.87353            0            0   -2068.2691    5.3801714         8000 
+Loop time of 11.5583 on 1 procs for 10 steps with 3 atoms
+
+Performance: 0.075 ns/day, 321.064 hours/ns, 0.865 timesteps/s
+0.1% CPU use with 1 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 1.1205e-05 | 1.1205e-05 | 1.1205e-05 |   0.0 |  0.00
+Output  | 0.023769   | 0.023769   | 0.023769   |   0.0 |  0.21
+Modify  | 11.535     | 11.535     | 11.535     |   0.0 | 99.79
+Other   |            | 2.608e-05  |            |       |  0.00
+
+Nlocal:        3.00000 ave           3 max           3 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:         0.00000 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:         0.00000 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0.0000000
+Neighbor list builds = 0
+Dangerous builds = 0
+Total wall time: 0:00:13

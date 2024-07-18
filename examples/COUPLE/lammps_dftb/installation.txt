@@ -1,0 +1,90 @@
+#---------------------------------------------------------------------
+Lammps + DFTB+ (lib message version)
+(https://github.com/by-student-2017/lammps-stable_29Sep2021)
+("atomic_style charge" version)
+#---------------------------------------------------------------------
+## Note
+D drive = "/mnt/d". Usually "/mnt/d" => "$HOME" or "~"
+
+## Use file (No ZMQ)
+#------------------------------------------
+## Build LAMMPS with its MESSAGE package installed (No ZMQ)
+0. sudo apt update
+  sudo apt -y install libzmq3-dev
+1. cd /mnt/d
+2. git clone https://github.com/by-student-2017/lammps-stable_29Sep2021.git
+3. cd /mnt/d/lammps-stable_29Sep2021/lib/message
+4. python2 Install.py -m
+5. cd /mnt/d/lammps-stable_29Sep2021/src
+6. make yes-message
+7. make mpi
+
+## Build the CSlib in a form usable by the vasp_wrapper.py script (No ZMQ)
+1. cd /mnt/d/lammps-stable_29Sep2021/lib/message/cslib/src
+2. make shlib zmq=no
+
+## Environment settings
+1. echo '# lammps-couple environment settings' >> ~/.bashrc
+2. echo 'export PYTHONPATH=${PYTHONPATH}:/mnt/d/lammps-stable_29Sep2021/lib/message/cslib/src' >> ~/.bashrc
+3. echo 'export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/mnt/d/lammps-stable_29Sep2021/lib/message/cslib/src' >> ~/.bashrc
+4. bash
+
+## Usage (No ZMQ)
+1. cd /mnt/d/lammps-stable_29Sep2021/examples/COUPLE/lammps_dftb
+2. mkdir cfg
+3. mpirun -np 4 /mnt/d/lammps-stable_29Sep2021/src/lmp_mpi -v mode file < in.client.lmp & python2 dftb_wrap.py file POSCAR
+#------------------------------------------
+
+## Use ZMQ
+#------------------------------------------
+## Build LAMMPS with its MESSAGE package installed (with ZMQ)
+0. sudo apt update
+  sudo apt -y install libzmq3-dev
+1. cd /mnt/d
+2. git clone https://github.com/by-student-2017/lammps-stable_29Sep2021.git
+3. cd /mnt/d/lammps-stable_29Sep2021/lib/message
+4. python2 Install.py -m -z
+5. cd /mnt/d/lammps-stable_29Sep2021/src
+6. make yes-message
+7. make mpi
+
+## Build the CSlib in a form usable by the vasp_wrapper.py script (with ZMQ)
+1. cd /mnt/d/lammps-stable_29Sep2021/lib/message/cslib/src
+2. make shlib
+
+## Environment settings
+1. echo '# lammps-couple environment settings' >> ~/.bashrc
+2. echo 'export PYTHONPATH=${PYTHONPATH}:/mnt/d/lammps-stable_29Sep2021/lib/message/cslib/src' >> ~/.bashrc
+3. echo 'export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/mnt/d/lammps-stable_29Sep2021/lib/message/cslib/src' >> ~/.bashrc
+4. bash
+
+## Usage (with ZMQ)
+1. cd /mnt/d/lammps-stable_29Sep2021/examples/COUPLE/lammps_dftb
+2. mkdir cfg
+3. mpirun -np 4 /mnt/d/lammps-stable_29Sep2021/src/lmp_mpi -v mode zmq < in.client.lmp & python2 dftb_wrap.py zmq POSCAR
+#------------------------------------------
+
+## Benchmark
+------
+Without ZMQ: Total wall time: 0:00:48
+with ZMQ: Total wall time: 0:00:45
+------
+Note: ZMQ is about 4% faster. If it is difficult to implement ZMQ, it is not a bad choice to not use ZMQ.
+
+## PC specifications used for DFTB+ v.23.1 calculations
+---------- ----------- -----------
+XPS 8950
+OS: Microsoft Windows 11 Home 64 bit
+BIOS: 1.14.0
+CPU： 12th Gen Intel(R) Core(TM) i7-12700
+Base Board：0R6PCT (A01)
+Memory：32 GB
+GPU: NVIDIA GeForce RTX3070
+WSL2: VERSION="22.04.1 LTS (Jammy Jellyfish)"
+python: Python 2.7.18
+DFTB+: v.23.1
+---------- ----------- -----------
+#---------------------------------------------------------------------
+# I had to rewrite simple.f90 quite a bit. It took a lot of effort to get it to work, and it was exhausting.
+# Further improvements will be left to other users.
+#---------------------------------------------------------------------

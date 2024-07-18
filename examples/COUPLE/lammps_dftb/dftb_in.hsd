@@ -1,6 +1,5 @@
-#sample DFTB+  script to run this test code
-Geometry = GenFormat {
-<<< "lammps.gen"
+Geometry = VaspFormat {
+ <<< POSCAR
 }
 Driver = {}
 Hamiltonian = DFTB {
@@ -57,7 +56,7 @@ Hamiltonian = DFTB {
 }
 Options = {
   WriteAutotestTag = No
-  WriteDetailedOut = No
+  WriteDetailedOut = Yes
   WriteDetailedXML = No
   WriteResultsTag = Yes
   RestartFrequency = 0

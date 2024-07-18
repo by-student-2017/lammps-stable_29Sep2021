@@ -5,7 +5,7 @@ LAMMPS_ROOT = ../../..
 LAMMPS_SRC = $(LAMMPS_ROOT)/src
 
 # Uncomment the line below if using the MPI stubs library
-MPI_STUBS = #-I$(LAMMPS_SRC)/STUBS
+#MPI_STUBS = #-I$(LAMMPS_SRC)/STUBS
 
 FC = mpif90 # replace with your Fortran compiler
 CXX = mpicc # replace with your C++ compiler
@@ -21,7 +21,7 @@ liblammps_fortran.so : LAMMPS.o LAMMPS-wrapper.o LAMMPS-wrapper2.o
 	$(FC) $(FFLAGS) -shared -o $@ $^
 
 simpleF.x: simple.o LAMMPS.o LAMMPS-wrapper.o LAMMPS-wrapper2.o
-	$(FC) $(FFLAGS) simple.o -o simpleF.x liblammps_fortran.a $(LAMMPS_SRC)/liblammps_mvapich.a -lstdc++ /usr/lib64/libfftw3.a 
+	$(FC) $(FFLAGS) simple.o -o simpleF.x liblammps_fortran.a $(LAMMPS_SRC)/liblammps_mpi.a -lstdc++ /usr/lib/x86_64-linux-gnu/libfftw3.a 
 
 liblammps_fortran.a : LAMMPS.o LAMMPS-wrapper.o LAMMPS-wrapper2.o
 	$(AR) rs $@ $^

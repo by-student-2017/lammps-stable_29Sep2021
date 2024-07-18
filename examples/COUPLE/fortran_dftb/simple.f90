@@ -29,6 +29,11 @@
        double precision :: volume
        type (C_ptr) :: Cptr
        type (C_ptr), pointer, dimension(:) :: Catom
+       
+       character(len=134) :: line
+       integer :: ios
+       integer :: nAtoms
+       real (C_double) :: mtot, e0tot
 
        call c_f_pointer(c_pos, pos, [3,nlocal])
        call c_f_pointer(c_fext, fext, [3,nlocal])
@@ -43,23 +48,52 @@
        lz = boxzhi - boxzlo
        volume = lx*ly*lz
        open (unit = 10, status = 'replace', action = 'write', file='lammps.gen')
-       write(10,*)nlocal,"S"
+       write(10,*) nlocal,"S"
        write(10,*) "C"
        do i = 1, nlocal
-         write(10,'(2I,3F15.6)')i,1,pos(:,ids(i))
+         !write(10,'(2I,3F15.6)')i,1,pos(:,ids(i))
+         write(10,*)i,1,pos(:,ids(i))
        enddo
        write(10,*)"0.0 0.0 0.0"
        write(10,*)lx,0,0
        write(10,*)0,ly,0
        write(10,*)0,0,lz
        close(10)
-       call system("./dftb+ > dftb.out")
-       open (unit = 10, status = 'old', file = 'results.out')
-       read(10,*)etot
-       read(10,*)ts_dftb
-       do i = 1, 3
-         read(10,*)stress(i,:)
-       enddo
+       call system("dftb+ > dftb.out")
+       open (unit = 10, status = 'old', file = 'results.tag')
+       do
+         read(10,'(A)', IOSTAT=ios) line
+         if(ios < 0) then
+           exit
+         end if
+         !
+         if (index(line, 'total_energy') /= 0) then
+           read(10,*) etot
+         end if
+         !
+         if (index(line, 'mermin_energy') /= 0) then
+           read(10,*) mtot ! = U - TS
+         end if
+         if (index(line, 'extrapolated0_energy') /= 0) then
+           read(10,*) e0tot ! = U(0 K)
+         end if
+         !
+         if (index(line, 'stress') /= 0) then
+           do i = 1, 3
+             read(10,*)stress(i,:)
+           enddo
+         end if
+         !
+         if (index(line, 'forces') /= 0) then
+           read(line(31:), *) nAtoms
+           do i = 1, nlocal
+             read(10,*) fext(:,ids(i))
+             fext(:,ids(i)) = fext(:,ids(i))*fconv
+           enddo
+         end if
+       end do
+       !
+       ts_dftb = e0tot - mtot ! TS = Temperature * entropy
        stress (:,:) = stress(:,:)*autoatm
        virial(1) = stress(1,1)/(nktv2p/volume)
        virial(2) = stress(2,2)/(nktv2p/volume)
@@ -69,10 +103,6 @@
        virial(6) = stress(2,3)/(nktv2p/volume)
        etot = etot*econv
        call lammps_set_external_vector(lmp,1,ts_dftb*econv)
-       do i = 1, nlocal
-         read(10,*)fext(:,ids(i))
-         fext(:,ids(i)) = fext(:,ids(i))*fconv
-       enddo
        close(10)
        call lammps_set_user_energy (lmp, etot)
        call lammps_set_user_virial (lmp, virial)

@@ -22,8 +22,9 @@ replicate       $x $y $z
 
 velocity	all create 300.0 87287 loop geom
 
-neighbor	0.3 bin
-neigh_modify	delay 0 every 10 check no
+#neighbor        0.3 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
+#neigh_modify    delay 0 every 10 check no
+comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
 
 fix		1 all nve
 fix             2 all client/md

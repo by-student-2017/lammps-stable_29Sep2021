@@ -2,7 +2,7 @@
 
 # ----------------------------------------------------------------------
 # LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
-# https://www.lammps.org/ Sandia National Laboratories
+# http://lammps.sandia.gov, Sandia National Laboratories
 # Steve Plimpton, sjplimp@sandia.gov
 # ----------------------------------------------------------------------
 
@@ -25,20 +25,22 @@
 
 from __future__ import print_function
 import sys
+import re
 
 version = sys.version_info[0]
 if version == 3:
   sys.exit("The CSlib python wrapper does not yet support python 3")
-  
+
 import subprocess
 import xml.etree.ElementTree as ET
 from cslib import CSlib
 
 # comment out 2nd line once 1st line is correct for your system
 
-vaspcmd = "srun -N 1 --ntasks-per-node=4 " + \
-          "-n 4 /projects/vasp/2017-build/cts1/vasp5.4.4/vasp_tfermi/bin/vasp_std"
-vaspcmd = "touch tmp"
+#vaspcmd = "srun -N 1 --ntasks-per-node=1 " + \
+#          "-n 1 dftb+"
+#vaspcmd = "touch tmp"
+vaspcmd = "dftb+"
 
 # enums matching FixClientMD class in LAMMPS
 
@@ -123,50 +125,145 @@ def poscar_write(poscar,natoms,ntypes,types,coords,box):
 # see https://docs.python.org/2/library/xml.etree.elementtree.html
 
 def vasprun_read():
-  tree = ET.parse('vasprun.xml')
-  root = tree.getroot()
   
-  #fp = open("vasprun.xml","r")
-  #root = ET.parse(fp)
-  
-  scsteps = root.findall('calculation/scstep')
-  energy = scsteps[-1].find('energy')
-  for child in energy:
-    if child.attrib["name"] == "e_0_energy":
-      eout = float(child.text)
+  #-------------------------------------------------------------------
+  # detailed.out version
+  #-------------------------------------------------------------------
+
+  start_reading = False
+  with open('results.tag', 'r') as file:
+    for line in file:
+      flag_line = line.split(":")
+      flag_line[0] = flag_line[0].strip()
+      if 'mermin_energy' in flag_line[0]:
+        start_reading = True
+        continue
+      end_text = line.strip().split(":")
+      if start_reading and flag_line[0] == 'extrapolated0_energy':
+        break
+      if start_reading:
+        values = line.strip().split()
+        eout = float(values[0])
+  #print(eout)
 
   fout = []
   sout = []
+  stensor = []
   qout = []
   
-  varrays = root.findall('calculation/varray')
-  for varray in varrays:
-    if varray.attrib["name"] == "forces":
-      forces = varray.findall("v")
-      for line in forces:
-        fxyz = line.text.split()
+  start_reading = False
+  with open('results.tag', 'r') as file:
+    for line in file:
+      flag_line = line.split(":")
+      flag_line[0] = flag_line[0].strip()
+      if 'forces' in flag_line[0]:
+        start_reading = True
+        continue
+      if start_reading and flag_line[0] == 'stress':
+        break
+      if start_reading:
+        fxyz = line.strip().split()
         fxyz = [float(value) for value in fxyz]
         fout += fxyz
-        qout += [float(0.0)] # dummy
-    if varray.attrib["name"] == "stress":
-      tensor = varray.findall("v")
-      stensor = []
-      for line in tensor:
-        sxyz = line.text.split()
+  #print(fout)
+
+  start_reading = False
+  with open('results.tag', 'r') as file:
+    for line in file:
+      flag_line = line.split(":")
+      flag_line[0] = flag_line[0].strip()
+      if 'stress' in flag_line[0]:
+        start_reading = True
+        continue
+      if start_reading and flag_line[0] == 'cell_volume':
+        break
+      if start_reading:
+        sxyz = line.strip().split()
         sxyz = [float(value) for value in sxyz]
         stensor.append(sxyz)
-      sxx = stensor[0][0]
-      syy = stensor[1][1]
-      szz = stensor[2][2]
-      # symmetrize off-diagonal components
-      sxy = 0.5 * (stensor[0][1] + stensor[1][0])
-      sxz = 0.5 * (stensor[0][2] + stensor[2][0])
-      syz = 0.5 * (stensor[1][2] + stensor[2][1])
-      sout = [sxx,syy,szz,sxy,sxz,syz]
+  sxx = stensor[0][0]
+  syy = stensor[1][1]
+  szz = stensor[2][2]
+  # symmetrize off-diagonal components
+  sxy = 0.5 * (stensor[0][1] + stensor[1][0])
+  sxz = 0.5 * (stensor[0][2] + stensor[2][0])
+  syz = 0.5 * (stensor[1][2] + stensor[2][1])
+  sout = [sxx,syy,szz,sxy,sxz,syz]
+  #print(sout)
 
-  #fp.close()
+  start_reading = False
+  with open('results.tag', 'r') as file:
+    for line in file:
+      flag_line = line.split(":")
+      flag_line[0] = flag_line[0].strip()
+      if 'gross_atomic_charges' in flag_line[0]:
+        start_reading = True
+        continue
+      if start_reading and flag_line[0] == 'dipole_moments':
+        break
+      if start_reading:
+        qxyz = line.strip().split()
+        qxyz = [float(value) for value in qxyz]
+        qout += qxyz
+  #print(qout)
+  #-------------------------------------------------------------------
   
   return eout,fout,sout,qout
+  
+  #-------------------------------------------------------------------
+  # detailed.out version
+  #-------------------------------------------------------------------
+#  search_term="Total Mermin free energy:"
+#  with open('detailed.out', 'r') as file:
+#    for line in file:
+#      if re.search(search_term, line):
+#         values = line.strip().split()
+#         eout = float(values[6])
+  #print(eout)
+#
+#  fout = []
+#  sout = []
+#  stensor = []
+#  
+#  start_reading = False
+#  with open('detailed.out', 'r') as file:
+#    for line in file:
+#      if 'Total Forces' in line:
+#        start_reading = True
+#        continue
+#      if start_reading and line.strip() == '':
+#        break
+#      if start_reading:
+#        force = line.strip().split()
+#        fxyz = force[1:]
+#        fxyz = [float(value) for value in fxyz]
+#        fout += fxyz
+  #print(fout)
+#
+#  start_reading = False
+#  with open('detailed.out', 'r') as file:
+#    for line in file:
+#      if 'Total stress tensor' in line:
+#        start_reading = True
+#        continue
+#      if start_reading and line.strip() == '':
+#        break
+#      if start_reading:
+#        sxyz = line.strip().split()
+#        sxyz = [float(value) for value in sxyz]
+#        stensor.append(sxyz)
+#  sxx = stensor[0][0]
+#  syy = stensor[1][1]
+#  szz = stensor[2][2]
+  # symmetrize off-diagonal components
+#  sxy = 0.5 * (stensor[0][1] + stensor[1][0])
+#  sxz = 0.5 * (stensor[0][2] + stensor[2][0])
+#  syz = 0.5 * (stensor[1][2] + stensor[2][1])
+#  sout = [sxx,syy,szz,sxy,sxz,syz]
+  #print(sout)
+  #-------------------------------------------------------------------
+  
+#  return eout,fout,sout
 
 # -------------------------------------
 # main program
@@ -181,7 +278,7 @@ mode = sys.argv[1]
 poscar_template = sys.argv[2]
 
 if mode == "file": cs = CSlib(1,mode,"tmp.couple",None)
-elif mode == "zmq": cs = CSlib(1,mode,"*:5555",None)
+elif mode == "zmq": cs = CSlib(1,mode,"*:8888",None)
 else:
   print("Syntax: python vasp_wrap.py file/zmq POSCARfile")
   sys.exit(1)
@@ -272,10 +369,10 @@ while 1:
   
   poscar_write(poscar_template,natoms,ntypes,types,coords,box)
 
-  # invoke VASP
+  # invoke DFTB+
   
-  print("\nLaunching VASP ...")
-  print(vaspcmd)
+  #print("\nLaunching DFTB+ ...")
+  #print(vaspcmd)
   subprocess.check_output(vaspcmd,stderr=subprocess.STDOUT,shell=True)
   
   # process VASP output
@@ -286,13 +383,13 @@ while 1:
 
   for i,value in enumerate(virial): virial[i] *= 1000.0
     
-  # return forces, energy, pressure to client
+  # return forces, energy, pressure, charge to client
   
   cs.send(msgID,4);
   cs.pack(FORCES,4,3*natoms,forces)
   cs.pack_double(ENERGY,energy)
   cs.pack(VIRIAL,4,6,virial)
-  cs.pack(CHARGES,4,natoms,charges) # dummy, charge = 0.0
+  cs.pack(CHARGES,4,natoms,charges)
   
 # final reply to client
   

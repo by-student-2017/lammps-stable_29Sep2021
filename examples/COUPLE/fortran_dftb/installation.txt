@@ -1,0 +1,36 @@
+#---------------------------------------------------------------------
+Lammps + DFTB+ (fortran_dftb version) 
+(https://github.com/by-student-2017/lammps-stable_29Sep2021)
+#---------------------------------------------------------------------
+## Note
+D drive = "/mnt/d". Usually "/mnt/d" => "$HOME" or "~"
+
+## Installation and compiling
+1. git clone https://github.com/by-student-2017/lammps-stable_29Sep2021.git
+2. cd /mnt/d/lammps-stable_29Sep2021/src
+3. make no-message
+4. make mpi
+5. make mode=lib mpi
+6. cd /mnt/d/lammps-stable_29Sep2021/examples/COUPLE/fortran_dftb
+7. make
+
+## Usage
+1. ./simpleF.x
+
+## PC specifications used for DFTB+ v.23.1 calculations
+---------- ----------- -----------
+XPS 8950
+OS: Microsoft Windows 11 Home 64 bit
+BIOS: 1.14.0
+CPU： 12th Gen Intel(R) Core(TM) i7-12700
+Base Board：0R6PCT (A01)
+Memory：32 GB
+GPU: NVIDIA GeForce RTX3070
+WSL2: VERSION="22.04.1 LTS (Jammy Jellyfish)"
+python: Python 2.7.18
+DFTB+: v.23.1
+---------- ----------- -----------
+#---------------------------------------------------------------------
+# I had to rewrite simple.f90 quite a bit. It took a lot of effort to get it to work, and it was exhausting.
+# Further improvements will be left to other users.
+#---------------------------------------------------------------------

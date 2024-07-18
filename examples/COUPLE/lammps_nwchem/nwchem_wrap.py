@@ -2,7 +2,7 @@
 
 # ----------------------------------------------------------------------
 # LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
-# https://www.lammps.org/ Sandia National Laboratories
+# http://lammps.sandia.gov, Sandia National Laboratories
 # Steve Plimpton, sjplimp@sandia.gov
 # ----------------------------------------------------------------------
 
@@ -40,13 +40,13 @@ from cslib import CSlib
 # comment out 2nd line once 1st line is correct for your system
 
 nwchemcmd = "mpirun -np 1 /usr/bin/nwchem"
-nwchemcmd = "touch tmp"
+#nwchemcmd = "touch tmp"
 
 # enums matching FixClientMD class in LAMMPS
 
 SETUP,STEP = range(1,2+1)
 DIM,PERIODICITY,ORIGIN,BOX,NATOMS,NTYPES,TYPES,COORDS,UNITS,CHARGE = range(1,10+1)
-FORCES,ENERGY,VIRIAL,ERROR = range(1,4+1)
+FORCES,ENERGY,VIRIAL,CHARGES,ERROR = range(1,5+1)
 
 # -------------------------------------
 # functions
@@ -131,9 +131,11 @@ def nwchem_read_ao(natoms, log):
   nwchem_output = open(log, 'r')
   energy_pattern = r"Total \w+ energy"
   gradient_pattern = "x          y          z           x          y          z"
+  charge_pattern = "Mulliken analysis of the total density"
 
   eout = 0.0
   fout = []
+  qout = []
 
   while True:
     line = nwchem_output.readline()
@@ -149,6 +151,17 @@ def nwchem_read_ao(natoms, log):
         line = nwchem_output.readline()
         forces = line.split()
         fout += [float(forces[5]), float(forces[6]), float(forces[7])]
+        
+    # pattern match for charges
+    if re.search(charge_pattern, line):
+      line = nwchem_output.readline()
+      line = nwchem_output.readline()
+      line = nwchem_output.readline()
+      line = nwchem_output.readline()
+      for i in range(natoms):
+        line = nwchem_output.readline()
+        charges = line.split()
+        qout += [float(charges[2])-float(charges[3])]
 
   # convert units
   hartree2eV = 27.21138602
@@ -156,7 +169,7 @@ def nwchem_read_ao(natoms, log):
   eout = eout * hartree2eV
   fout = [i * -hartree2eV/bohr2angstrom for i in fout]
 
-  return eout,fout
+  return eout,fout,qout
 
 # -------------------------------------
 # read initial planewave input file to setup problem
@@ -253,6 +266,9 @@ def nwchem_read_pw(log):
   sout = []
   fout = []
   reading_forces = False
+  qout = []
+  reading_charges = False
+  reading_charges_flag = False
 
   while True:
     line = nw_output.readline()
@@ -287,6 +303,19 @@ def nwchem_read_pw(log):
       syz = 0.5 * (stensor[5] + stensor[7])
       sout = [sxx,syy,szz,sxy,sxz,syz]
 
+    # pattern match for charges
+    if re.search("Total Q", line):
+      reading_charges = False
+      reading_charges_flag = False
+    if reading_charges and reading_charges_flag:
+      charges = line.split()
+      #qout += [float(charges[2]), float(charges[3]), float(charges[4])]
+      qout += [float(charges[4])]
+    if re.search("charge analysis on each atom",line):
+      reading_charges = True
+    if re.search("  --  ---- ",line):
+      reading_charges_flag = True
+
   # convert units
   hartree2eV = 27.21138602
   bohr2angstrom = 0.52917721092
@@ -294,8 +323,9 @@ def nwchem_read_pw(log):
   eout = eout * hartree2eV
   fout = [i * hartree2eV/bohr2angstrom for i in fout]
   sout = [i * austress2bar for i in sout]
+    
 
-  return eout,fout,sout
+  return eout,fout,sout,qout
 
 # -------------------------------------
 # main program
@@ -427,16 +457,17 @@ while 1:
   # process NWChem output
 
   if basis_type == "ao":
-    energy,forces = nwchem_read_ao(natoms,log)
+    energy,forces,charges = nwchem_read_ao(natoms,log)
     virial = [0,0,0,0,0,0]
   elif basis_type == "pw":
-    energy,forces,virial = nwchem_read_pw(log)
+    energy,forces,virial,charges = nwchem_read_pw(log)
 
-  # return forces, energy to client
-  cs.send(msgID,3)
+  # return forces, energy, charges to client
+  cs.send(msgID,4)
   cs.pack(FORCES,4,3*natoms,forces)
   cs.pack_double(ENERGY,energy)
   cs.pack(VIRIAL,4,6,virial)
+  cs.pack(CHARGES,4,natoms,charges)
 
 # final reply to client
 
