@@ -1,0 +1,102 @@
+Geometry = VaspFormat {
+ <<< POSCAR
+}
+#Geometry = GenFormat {
+#  <<< "geometry.gen"
+#}
+Driver = {}
+Hamiltonian = DFTB {
+  Scc = Yes
+  SccTolerance = 1e-5
+  MaxSCCIterations = 1000
+  SlaterKosterFiles = Type2FileNames {
+    Prefix = "./mio-1-1/"
+    Separator = "-"
+    Suffix = ".skf"
+  }
+  MaxAngularMomentum {
+     O = "p"
+     C = "p"
+     H = "s"
+  }
+  KPointsAndWeights = SuperCellFolding {
+2 0 0
+0 2 0
+0 0 2
+0.0 0.0 0.0
+  }
+  Differentiation = FiniteDiff {
+    Delta = 1.0E-2
+  }
+  #PolynomialRepulsive = {}
+  ShellResolvedSCC = No
+  #OldSKInterpolation = No
+  #RangeSeparated = None {}
+  ReadInitialCharges = No
+  InitialCharges = {}
+  EwaldParameter = 0.0
+  EwaldTolerance = 1.0E-9
+  #HCorrection = None {}
+  SpinPolarisation = {}
+  ElectricField = {}
+  Solver = MAGMA {}
+  #Solver = RelativelyRobust {}
+  Charge = 0.0
+  #OnSiteCorrection = {}
+  #
+  #Dispersion = TS {
+  #  Damping = 20.0
+  #  RangeSeparation = 0.94
+  #  ReferenceSet = "TS"
+  #}
+  Dispersion = SimpleDftD3 {
+    a1 = 0.5719
+    a2 = 3.6017
+    s6 = 1.0
+    s8 = 0.5883
+  }
+  #
+  Solvation = {}
+  #ThirdOrder = No
+  #ThirdOrderFull = No
+  ForceEvaluation = "Traditional"
+  Filling = Fermi {
+    Temperature = 0.0000000000000000
+    IndependentKFilling = No
+  }
+}
+Options = {
+  WriteAutotestTag = No
+  WriteDetailedOut = No
+  WriteDetailedXML = No
+  WriteResultsTag = Yes
+  RestartFrequency = 0
+  RandomSeed = 0
+  WriteHS = No
+  WriteRealHS = No
+  MinimiseMemoryUsage = No
+  ShowFoldedCoords = No
+  TimingVerbosity = 1
+  WriteChargesAsText = No
+}
+ParserOptions = {
+  ParserVersion = 13
+  WriteHSDInput = Yes
+  #WriteXMLInput = No
+  StopAfterParsing = No
+  IgnoreUnprocessedNodes = No
+}
+#Parallel = {
+#  UseOmpThreads = Yes
+#  Groups = 1
+#}
+Analysis = {
+  CalculateForces = Yes
+  #ProjectStates = {}
+  #WriteEigenvectors = No
+  #WriteBandOut = No
+  MullikenAnalysis = No
+  AtomResolvedEnergies = No
+}
+ExcitedState = {}
+#Reks = None {}

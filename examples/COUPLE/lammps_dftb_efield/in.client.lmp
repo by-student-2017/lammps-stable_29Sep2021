@@ -1,0 +1,68 @@
+#-----------------------------------------------------------------------------------------
+# The two p-Coumryl_alcohol in water for use with DFTB+ using electric field on lammps
+# test: lammps-stable_29Sep2021
+#-------------------- Initialization -----------------------------------------------------
+clear
+echo            both    # echoes each input script command to both log file and screen
+#package         omp 1   # of OpenMP threads: export OMP_NUM_THREADS=16 (need: yes-OPENMP)
+#-----------------------------------------------------------------------------------------
+variable        mode index file
+ 
+if "${mode} == file" then &
+  "message client md file tmp.couple" &
+elif "${mode} == zmq" &
+  "message client md zmq localhost:8888" &
+
+# Note: General Web (localhost:80), Secure HTTPS (localhost:443), Develop. XAMPP (localhost:8888), Develop. Web (localhost:5555)
+#-----------------------------------------------------------------------------------------
+units           metal
+dimension       3
+boundary        p p f  # for wall/reflect (add electric field at z axis) (Note: f is dummy for DFTB+)
+atom_style      charge
+atom_modify     sort 0 0.0 map yes
+
+#-----------------------------------------------------------------------------------------
+variable Tini equal 273+25.0 # [K] (Initial temperature)
+variable Tfin equal 273+85.0 # [K] (Annealing temperature)
+
+variable Nout equal 1 # every 1 time steps to the specified file
+
+#-------------------- Atom & Lattice description ----------------------------------------
+read_data data.lammps
+
+variable elem string "C O H" # specifies the potential file used
+
+mass 3 2.00 # H => D (Make the hydrogen heavier to increase the timestep)
+
+#-------------------- Settings -----------------------------------------------------------
+reset_timestep 0
+
+timestep        0.0005 # 0.5 [fs] (Recommend 0.1-0.5 [fs]), sets the timestep for subsequent simulations
+
+velocity        all create ${Tini} 123456 loop geom # sets the velocity of a group of atoms
+
+#neighbor        0.3 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
+#neigh_modify    delay 0 every 10 check no
+comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
+
+thermo          ${Nout} # computes and prints thermodynamic 
+thermo_style custom step temp pe etotal press vol density # specifies content of thermodynamic data to be printed in screen
+
+dump            d1 all cfg ${Nout} cfg/run.*.cfg mass type xs ys zs id type q
+dump_modify     d1 element ${elem}
+
+#-------------------- Run the simulation -------------------------------------------------
+# Non-Equilibrium system, calculation settings
+fix             f1 all nve
+fix             f2 all client/md
+fix_modify      f2 energy yes # or 2 virial yes
+fix             f3 all langevin  ${Tini} ${Tfin} $(15*dt) 123456
+
+# E-field component values (electric field units) (electric field = volts/Angstrom)
+fix kick all efield 0.0 0.0 $(2.0/lz) # 2.0 V for z axis
+fix f0 all wall/reflect zlo EDGE zhi EDGE # For boundary p p f
+#fix walls all wall/reflect zlo 0.0 zhi 40.0 units box # For boundary p p f
+
+run             100
+
+#-------------------- End ----------------------------------------------------------------
