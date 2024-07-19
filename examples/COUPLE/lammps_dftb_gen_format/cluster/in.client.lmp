@@ -1,0 +1,44 @@
+# small W unit cell for use with DFTB+
+
+variable        mode index file
+ 
+if "${mode} == file" then &
+  "message client md file tmp.couple" &
+elif "${mode} == zmq" &
+  "message client md zmq localhost:8888" &
+# Note: General Web (localhost:80), Secure HTTPS (localhost:443), Develop. XAMPP (localhost:8888), Develop. Web (localhost:5555)
+
+units           metal
+atom_style      charge
+boundary        m m m # for (C)luster of DFTB+
+#boundary        p p p # for (S)upercell of DFTB+
+#boundary        p p f # for wall/reflect
+atom_modify     sort 0 0.0 map yes
+
+read_data data.lammps
+
+velocity        all create 300.0 87287 loop geom
+
+#neighbor        0.3 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
+#neigh_modify    delay 0 every 10 check no
+comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
+
+timestep 0.00025 # 0.25 [fs]
+
+fix             1 all nve
+fix             2 all client/md
+fix_modify      2 energy yes # or 2 virial yes
+fix             3 all langevin  300.0 300.0 $(20*dt) 123456
+
+dump            1 all cfg 1 cfg/run.*.cfg mass type xs ys zs id type q
+dump_modify     1 element C O H
+
+# E-field component values (electric field units) (electric field = volts/Angstrom)
+#fix kick all efield 0.0 0.0 $(2.0/lz)
+#fix f0 all wall/reflect zlo EDGE zhi EDGE # For boundary p p f
+#fix walls all wall/reflect zlo 0.0 zlo 20.0 units box # For boundary p p f
+
+thermo          1
+thermo_style    one
+
+run             10

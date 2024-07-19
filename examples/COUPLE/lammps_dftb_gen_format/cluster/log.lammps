@@ -1,0 +1,89 @@
+LAMMPS (29 Sep 2021)
+# small W unit cell for use with DFTB+
+
+variable        mode index file
+
+if "${mode} == file" then   "message client md file tmp.couple" elif "${mode} == zmq"   "message client md zmq localhost:8888" # Note: General Web (localhost:80), Secure HTTPS (localhost:443), Develop. XAMPP (localhost:8888), Develop. Web (localhost:5555)
+message client md file tmp.couple
+
+units           metal
+atom_style      charge
+boundary        m m m # for (C)luster of DFTB+
+#boundary        p p p # for (S)upercell of DFTB+
+#boundary        p p f # for wall/reflect
+atom_modify     sort 0 0.0 map yes
+
+read_data data.lammps
+Reading data file ...
+  orthogonal box = (0.0000000 0.0000000 0.0000000) to (20.000000 20.000000 20.000000)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  291 atoms
+  read_data CPU = 0.008 seconds
+
+velocity        all create 300.0 87287 loop geom
+
+#neighbor        0.3 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
+#neigh_modify    delay 0 every 10 check no
+comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
+
+timestep 0.00025 # 0.25 [fs]
+
+fix             1 all nve
+fix             2 all client/md
+fix_modify      2 energy yes # or 2 virial yes
+fix             3 all langevin  300.0 300.0 $(20*dt) 123456
+fix             3 all langevin  300.0 300.0 0.0050000000000000001041 123456
+
+dump            1 all cfg 1 cfg/run.*.cfg mass type xs ys zs id type q
+dump_modify     1 element C O H
+
+# E-field component values (electric field units) (electric field = volts/Angstrom)
+#fix kick all efield 0.0 0.0 $(2.0/lz)
+#fix f0 all wall/reflect zlo EDGE zhi EDGE # For boundary p p f
+#fix walls all wall/reflect zlo 0.0 zlo 20.0 units box # For boundary p p f
+
+thermo          1
+thermo_style    one
+
+run             10
+Per MPI rank memory allocation (min/avg/max) = 3.672 | 3.672 | 3.672 Mbytes
+Step Temp E_pair E_mol TotEng Press Volume 
+       0          300            0            0   -76678.765    1501.4574         8000 
+       1     288.5644            0            0   -76679.641    1444.2238         8000 
+       2    308.54843            0            0   -76679.889    1544.2411         8000 
+       3    336.22798            0            0   -76680.361    1682.7733         8000 
+       4    364.23573            0            0   -76681.283     1822.948         8000 
+       5    391.93668            0            0   -76682.509    1961.5874         8000 
+       6     415.6839            0            0   -76684.113    2080.4388         8000 
+       7    442.29953            0            0   -76685.885    2213.6463         8000 
+       8    472.87683            0            0   -76687.743    2366.6813         8000 
+       9    505.65815            0            0   -76689.649    2530.7472         8000 
+      10    537.88131            0            0   -76691.759    2692.0195         8000 
+Loop time of 100.143 on 1 procs for 10 steps with 291 atoms
+
+Performance: 0.002 ns/day, 11126.986 hours/ns, 0.100 timesteps/s
+0.0% CPU use with 1 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 6.869e-06  | 6.869e-06  | 6.869e-06  |   0.0 |  0.00
+Output  | 0.027907   | 0.027907   | 0.027907   |   0.0 |  0.03
+Modify  | 100.11     | 100.11     | 100.11     |   0.0 | 99.97
+Other   |            | 2.305e-05  |            |       |  0.00
+
+Nlocal:        291.000 ave         291 max         291 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:         0.00000 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:         0.00000 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0.0000000
+Neighbor list builds = 0
+Dangerous builds = 0
+Total wall time: 0:01:50
