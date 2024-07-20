@@ -1,0 +1,95 @@
+#-----------------------------------------------------------------------------------------
+# The one molecule in water for use with DFTB+
+# test: lammps-stable_29Sep2021
+#-------------------- Initialization -----------------------------------------------------
+clear
+echo            both    # echoes each input script command to both log file and screen
+#package         omp 1   # of OpenMP threads: export OMP_NUM_THREADS=16 (need: yes-OPENMP)
+#-----------------------------------------------------------------------------------------
+variable        mode index file
+ 
+if "${mode} == file" then &
+  "message client md file tmp.couple" &
+elif "${mode} == zmq" &
+  "message client md zmq localhost:8888" &
+
+# Note: General Web (localhost:80), Secure HTTPS (localhost:443), Develop. XAMPP (localhost:8888), Develop. Web (localhost:5555)
+#-----------------------------------------------------------------------------------------
+units           metal
+dimension       3
+boundary        m m m # for (C)luster of DFTB+
+atom_style      full  # yes-MOLECULE
+atom_modify     sort 0 0.0 map yes
+
+#-----------------------------------------------------------------------------------------
+variable Tini equal 273+25.0 # [K] (Initial temperature)
+variable Tfin equal 273+25.0 # [K] (Annealing temperature)
+
+variable Nout equal 10 # every 10 time steps to the specified file
+variable Nh2o equal 20 # set the number of waters (Due to minimize settings, an even number is required)
+
+variable elem string "C O H Ow Hw"
+
+#-------------------- Atom & Lattice description ----------------------------------------
+read_data data.lammps extra/bond/per/atom 2 extra/angle/per/atom 1 extra/special/per/atom 2
+# extra for H2O
+
+#-------------------- pair style settings --------------------------------
+pair_style hybrid/overlay zero 1.0 lj/cut 10.0
+pair_coeff * * zero 1.0
+pair_coeff 4 4 lj/cut $(0.1553*0.04336125) 3.166 # O-O
+pair_coeff 4 5 lj/cut 0.0 1.0 # O-H
+pair_coeff 5 5 lj/cut 0.0 1.0 # H-H
+
+bond_style harmonic
+bond_coeff 1 $(80.0*0.04336125) 1.0 # the r0 of O-H bond [Angstrom]
+
+angle_style harmonic
+angle_coeff 1 $(300.0*0.04336125) 109.47 # the theta0 of H-O-H angle [degree]
+
+region box block INF INF  INF INF  INF INF
+molecule water spce.mol # yes-RIGID
+create_atoms 0 random ${Nh2o} 12345 box mol water 1
+
+#-------------------- Settings -----------------------------------------------------------
+
+mass 3 2.00 # H => D (Make the hydrogen heavier to increase the timestep)
+
+#group main  id <= 21 # e.g., use dump settings
+#group water id >= 22
+
+neighbor        2.0 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
+neigh_modify    delay 0 every 10 check no
+comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
+
+thermo          ${Nout} # computes and prints thermodynamic 
+thermo_style custom step temp pe etotal press vol density # specifies content of thermodynamic data to be printed in screen
+
+velocity        all create ${Tini} 123456 loop geom # sets the velocity of a group of atoms
+
+fix             f0 all client/md
+fix_modify      f0 energy yes # or 2 virial yes
+
+#-------------------- Energy minimization ------------------------------------------------
+minimize 1.0e-4 1.0e-6 $(50+v_Nh2o/2) 1000
+
+#-------------------- Run the simulation -------------------------------------------------
+reset_timestep 0
+
+timestep        $(0.001*0.25) # 0.25 [fs] (Recommend 0.1-0.5 [fs]), sets the timestep for subsequent simulations
+
+# Equilibrium system, calculation settings
+fix integrate all nvt temp ${Tini} ${Tfin} $(10*dt)
+#fix integrate all npt temp ${Tini} ${Tfin} $(10*dt) iso 1.0 1.0 $(100*dt)
+
+#-------------------- 
+dump            d1 all cfg ${Nout} cfg/run.*.cfg mass type xs ys zs id type q
+dump_modify     d1 element ${elem}
+#-------------------- 
+#dump            d2 main cfg ${Nout} cfg/run_main.*.cfg mass type xs ys zs id type q
+#dump_modify     d2 element ${elem}
+#-------------------- 
+
+run             100
+
+#-------------------- End ----------------------------------------------------------------
