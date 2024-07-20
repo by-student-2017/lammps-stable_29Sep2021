@@ -151,6 +151,7 @@ def vasprun_read():
   # detailed.out version
   #-------------------------------------------------------------------
 
+  eunitconv=1.0/0.367493245336341E-01
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
@@ -164,7 +165,7 @@ def vasprun_read():
         break
       if start_reading:
         values = line.strip().split()
-        eout = float(values[0])
+        eout = float(values[0])*eunitconv
   #print(eout)
 
   fout = []
@@ -172,6 +173,7 @@ def vasprun_read():
   stensor = []
   qout = []
   
+  funitconv=1.0/0.194469064593167E-01
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
@@ -188,12 +190,13 @@ def vasprun_read():
         break
       if start_reading and flag_line[0] != 'forces_ext_charges':
         fxyz = line.strip().split()
-        fxyz = [float(value) for value in fxyz]
+        fxyz = [float(value)*funitconv for value in fxyz]
         fout += fxyz
       #else:
       #  print(flag_line[0])
   #print(fout)
 
+  sunitconv=1.0/0.367493245336341E-01
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
@@ -210,7 +213,7 @@ def vasprun_read():
         break
       if start_reading:
         sxyz = line.strip().split()
-        sxyz = [float(value) for value in sxyz]
+        sxyz = [float(value)*sunitconv for value in sxyz]
         stensor.append(sxyz)
   if start_reading:
     sxx = stensor[0][0]
