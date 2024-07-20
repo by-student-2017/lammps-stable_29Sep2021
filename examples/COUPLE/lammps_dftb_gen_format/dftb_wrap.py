@@ -134,6 +134,7 @@ def vasprun_read():
   # detailed.out version
   #-------------------------------------------------------------------
 
+  eunitconv=1.0/0.367493245336341E-01
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
@@ -147,7 +148,7 @@ def vasprun_read():
         break
       if start_reading:
         values = line.strip().split()
-        eout = float(values[0])
+        eout = float(values[0])*eunitconv
   #print(eout)
 
   fout = []
@@ -155,6 +156,7 @@ def vasprun_read():
   stensor = []
   qout = []
   
+  funitconv=1.0/0.194469064593167E-01
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
@@ -169,11 +171,13 @@ def vasprun_read():
         break
       if start_reading:
         fxyz = line.strip().split()
-        fxyz = [float(value) for value in fxyz]
+        fxyz = [float(value)*funitconv for value in fxyz]
         fout += fxyz
   #print(fout)
 
+  sunitconv=1.0/0.367493245336341E-01
   start_reading = False
+  s_flag = 0
   with open('results.tag', 'r') as file:
     for line in file:
       flag_line = line.split(":")
@@ -182,12 +186,13 @@ def vasprun_read():
         start_reading = True
         continue
       if start_reading and flag_line[0] == 'cell_volume':
+        s_flag = 1
         break
       if start_reading:
         sxyz = line.strip().split()
-        sxyz = [float(value) for value in sxyz]
+        sxyz = [float(value)*sunitconv for value in sxyz]
         stensor.append(sxyz)
-  if start_reading:
+  if s_flag == 1:
     sxx = stensor[0][0]
     syy = stensor[1][1]
     szz = stensor[2][2]
@@ -222,18 +227,20 @@ def vasprun_read():
   #-------------------------------------------------------------------
   # detailed.out version
   #-------------------------------------------------------------------
+#  eunitconv=1.0/0.367493245336341E-01
 #  search_term="Total Mermin free energy:"
 #  with open('detailed.out', 'r') as file:
 #    for line in file:
 #      if re.search(search_term, line):
 #         values = line.strip().split()
-#         eout = float(values[6])
+#         eout = float(values[6])*eunitconv
   #print(eout)
 #
 #  fout = []
 #  sout = []
 #  stensor = []
 #  
+#  funitconv=1.0/0.194469064593167E-01
 #  start_reading = False
 #  with open('detailed.out', 'r') as file:
 #    for line in file:
@@ -245,10 +252,11 @@ def vasprun_read():
 #      if start_reading:
 #        force = line.strip().split()
 #        fxyz = force[1:]
-#        fxyz = [float(value) for value in fxyz]
+#        fxyz = [float(value)*funitconv for value in fxyz]
 #        fout += fxyz
   #print(fout)
 #
+#  sunitconv=1.0/0.367493245336341E-01
 #  start_reading = False
 #  with open('detailed.out', 'r') as file:
 #    for line in file:
@@ -259,7 +267,7 @@ def vasprun_read():
 #        break
 #      if start_reading:
 #        sxyz = line.strip().split()
-#        sxyz = [float(value) for value in sxyz]
+#        sxyz = [float(value)*sunitconv for value in sxyz]
 #        stensor.append(sxyz)
 #  sxx = stensor[0][0]
 #  syy = stensor[1][1]
