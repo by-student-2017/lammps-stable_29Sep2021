@@ -1,0 +1,244 @@
+#---------------------------------------------------------------------
+Lammps + DFTB+ (lib message version)
+(https://github.com/by-student-2017/lammps-stable_29Sep2021)
+("atomic_style charge" version)
+#---------------------------------------------------------------------
+## Note
+D drive = "/mnt/d". Usually "/mnt/d" => "$HOME" or "~"
+
+## Use file (No ZMQ)
+#------------------------------------------
+## Build LAMMPS with its MESSAGE package installed (No ZMQ)
+0. sudo apt update
+  sudo apt -y install libzmq3-dev
+1. cd /mnt/d
+2. git clone https://github.com/by-student-2017/lammps-stable_29Sep2021.git
+3. cd /mnt/d/lammps-stable_29Sep2021/lib/message
+4. python2 Install.py -m
+5. cd /mnt/d/lammps-stable_29Sep2021/src
+6. make yes-message
+7. make mpi
+
+## Build the CSlib in a form usable by the vasp_wrapper.py script (No ZMQ)
+1. cd /mnt/d/lammps-stable_29Sep2021/lib/message/cslib/src
+2. make shlib zmq=no
+
+## Environment settings
+1. echo '# lammps-couple environment settings' >> ~/.bashrc
+2. echo 'export PYTHONPATH=${PYTHONPATH}:/mnt/d/lammps-stable_29Sep2021/lib/message/cslib/src' >> ~/.bashrc
+3. echo 'export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/mnt/d/lammps-stable_29Sep2021/lib/message/cslib/src' >> ~/.bashrc
+4. bash
+
+## Usage (No ZMQ) (supercell)
+1. cd /mnt/d/lammps-stable_29Sep2021/examples/COUPLE/lammps_dftb_gen_format/supercell
+2. mkdir cfg
+3. export OMP_NUM_THREADS=1
+4. mpirun -np 1 /mnt/d/lammps-stable_29Sep2021/src/lmp_mpi -v mode file < in.client.lmp & python2 ./../dftb_wrap.py file geometry_tmp.gen &
+
+## Usage (No ZMQ) (cluster)
+1. cd /mnt/d/lammps-stable_29Sep2021/examples/COUPLE/lammps_dftb_gen_format/cluster
+2. mkdir cfg
+3. export OMP_NUM_THREADS=1
+4. mpirun -np 1 /mnt/d/lammps-stable_29Sep2021/src/lmp_mpi -v mode file < in.client.lmp & python2 ./../dftb_wrap.py file geometry_tmp.gen &
+#------------------------------------------
+
+## Use ZMQ
+#------------------------------------------
+## Build LAMMPS with its MESSAGE package installed (with ZMQ)
+0. sudo apt update
+  sudo apt -y install libzmq3-dev
+1. cd /mnt/d
+2. git clone https://github.com/by-student-2017/lammps-stable_29Sep2021.git
+3. cd /mnt/d/lammps-stable_29Sep2021/lib/message
+4. python2 Install.py -m -z
+5. cd /mnt/d/lammps-stable_29Sep2021/src
+6. make yes-message
+7. make mpi
+
+## Build the CSlib in a form usable by the vasp_wrapper.py script (with ZMQ)
+1. cd /mnt/d/lammps-stable_29Sep2021/lib/message/cslib/src
+2. make shlib
+
+## Environment settings
+1. echo '# lammps-couple environment settings' >> ~/.bashrc
+2. echo 'export PYTHONPATH=${PYTHONPATH}:/mnt/d/lammps-stable_29Sep2021/lib/message/cslib/src' >> ~/.bashrc
+3. echo 'export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/mnt/d/lammps-stable_29Sep2021/lib/message/cslib/src' >> ~/.bashrc
+4. bash
+
+## Usage (with ZMQ) (supercell)
+1. cd /mnt/d/lammps-stable_29Sep2021/examples/COUPLE/lammps_dftb_gen_format/supercell
+2. mkdir cfg
+3. export OMP_NUM_THREADS=1
+4. mpirun -np 1 /mnt/d/lammps-stable_29Sep2021/src/lmp_mpi -v mode zmq < in.client.lmp & python2 dftb_wrap.py zmq geometry_tmp.gen &
+
+## Usage (with ZMQ) (cluster)
+1. cd /mnt/d/lammps-stable_29Sep2021/examples/COUPLE/lammps_dftb_gen_format/cluster
+2. mkdir cfg
+3. export OMP_NUM_THREADS=1
+4. mpirun -np 1 /mnt/d/lammps-stable_29Sep2021/src/lmp_mpi -v mode zmq < in.client.lmp & python2 dftb_wrap.py zmq geometry_tmp.gen &
+#------------------------------------------
+
+## Benchmark
+------
+Without ZMQ: Total wall time: 0:00:48
+with ZMQ: Total wall time: 0:00:45
+------
+Note: ZMQ is about 4% faster. If it is difficult to implement ZMQ, it is not a bad choice to not use ZMQ.
+
+## PC specifications used for DFTB+ v.23.1 calculations
+---------- ----------- -----------
+XPS 8950
+OS: Microsoft Windows 11 Home 64 bit
+BIOS: 1.14.0
+CPU： 12th Gen Intel(R) Core(TM) i7-12700
+Base Board：0R6PCT (A01)
+Memory：32 GB
+GPU: NVIDIA GeForce RTX3070
+WSL2: VERSION="22.04.1 LTS (Jammy Jellyfish)"
+python: Python 2.7.18
+DFTB+: v.23.1
+---------- ----------- -----------
+#---------------------------------------------------------------------
+#---------------------------------------------------------------------
+## DFTB+ (version 23.1) (Edit: 11/Jul/2024)
+(ubuntu 22.04 LTS on WSL windows11)
+Note: D drive = /mnt/d (Usually, "/mnt/d" => "$HOME" or "~")
+
+## cuda-toolkit and nvcc
+1. sudo apt -y update
+2. sudo apt -y install nvidia-cuda-toolkit
+3. nvidia-smi
+4. nvcc -V
+5. which nvcc
+  (/usr/bin/nvcc)
+
+## Select Target Platform (e.g., RTX3070)
+0. cd /mnt/d
+1. wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.0-1_all.deb
+2. sudo dpkg -i cuda-keyring_1.0-1_all.deb
+3. sudo apt update
+4. sudo apt -y install cuda
+(5. sudo apt -y install nvidia-prime)
+[S1] CUDA Toolkit 12.5 Update 1 Downloads | NVIDIA Developer
+
+## GPU (GUDA) Environment settings
+0. cd /mnt/d
+1. echo '# GPU (GUDA) environment settings' >> ~/.bashrc
+2. echo 'export PATH=/usr/local/cuda/bin:$PATH' >> ~/.bashrc
+3. echo 'export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH' >> ~/.bashrc
+4. bash
+
+## Installation (magma-2.8.0) (make file version)
+1. cd /mnt/d
+2. wget https://icl.utk.edu/projectsfiles/magma/downloads/magma-2.8.0.tar.gz
+3. tar zxvf magma-2.8.0.tar.gz
+4. cd magma-2.8.0
+5. cp make.inc-examples/make.inc.openblas make.inc
+6. vim make.inc
+-----(before)
+OPENBLASDIR ?= /usr/local/openblas
+-----
+-----(after)
+OPENBLASDIR ?= /usr/lib/x86_64-linux-gnu/openblas-pthread
+-----
+7. make
+8. make install prefix=/mnt/d/magma/2.8.0
+#------------------------------------------------
+  or
+7. make lib
+8. make testing
+9. make sparse-lib
+10. make sparse-testing
+11. make install prefix=/mnt/d/magma/2.8.0
+#------------------------------------------------
+Note: RTX3070; Ampere, sm_80 (arch=compute_80, code=sm_80)
+Note: https://icl.utk.edu/magma/
+
+## CUDA Environment settings for MAGMA
+0. cd /mnt/d
+1. echo '# CUDA environment settings for MAGMA' >> ~/.bashrc
+2. echo 'export CUDADIR=/usr/local/cuda' >> ~/.bashrc
+3. echo 'export OPENBLASDIR=/usr/lib/x86_64-linux-gnu/openblas-pthread' >> ~/.bashrc
+4. echo 'export LD_LIBRARY_PATH=/mnt/d/magma/2.8.0/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}' >> ~/.bashrc
+5. bash
+Note: MAGMA: Installing MAGMA (utk.edu), Installing MAGMA on Ubuntu 18.04 | rgb.sh
+
+## Installation (deftb+) (wget command case) 
+(gfortran+ OpenBLAS + ARPACK + MAGMA (GPU))
+・DFTB+ Stable (stable version 23.1)
+0. sudo apt update
+  sudo apt -y install gfortran g++ build-essential
+  sudo apt -y install libopenblas-dev
+  sudo apt -y install libarpack2-dev
+  sudo apt -y install make cmake
+  sudo apt -y install python3-numpy python3-setuptools
+1. cd /mnt/d
+2. wget https://github.com/dftbplus/dftbplus/releases/download/23.1/dftbplus-23.1.tar.xz
+3. tar xvf dftbplus-23.1.tar.xz
+4. cd dftbplus-23.1
+5. ./utils/get_opt_externals ALL
+6. vim config.cmake
+----------(before)
+option(WITH_OMP "Whether OpenMP thread parallisation should be enabled" TRUE)
+option(WITH_GPU "Whether DFTB+ should support GPU-acceleration" FALSE)
+option(WITH_TBLITE "Whether xTB support should be included via tblite." FALSE)
+option(WITH_ARPACK "Whether the ARPACK library should be included (needed for TD-DFTB)" FALSE)
+option(WITH_SDFTD3 "Whether the s-dftd3 library should be included" FALSE)
+option(WITH_PYTHON "Whether the Python components of DFTB+ should be tested and installed" FALSE)
+option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" TRUE)
+----------
+----------(after)
+option(WITH_OMP "Whether OpenMP thread parallisation should be enabled" TRUE)
+option(WITH_GPU "Whether DFTB+ should support GPU-acceleration" TRUE)
+option(WITH_TBLITE "Whether xTB support should be included via tblite." TRUE)
+option(WITH_ARPACK "Whether the ARPACK library should be included (needed for TD-DFTB)" TRUE)
+option(WITH_SDFTD3 "Whether the s-dftd3 library should be included" TRUE)
+option(WITH_PYTHON "Whether the Python components of DFTB+ should be tested and installed" TRUE)
+option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" TRUE)
+----------
+7. mkdir _build
+8. FC=gfortran CC=gcc cmake -DLAPACK_LIBRARY="-L/usr/lib/x86_64-linux-gnu/openblas-pthread -lopenblas" -DBLAS_LIBRARY="-L/usr/lib/x86_64-linux-gnu/openblas-pthread -llapack -lblas" -DMAGMA_LIBRARY="-lm -L/mnt/d/magma/2.8.0/lib -lmagma_sparse -lmagma -L/usr/local/cuda/lib64 -lcublas -lcudart -lcusparse" -DCMAKE_INSTALL_PREFIX="/mnt/d/dftbplus-23.1/dftb+" -Wno-dev -B _build ./
+9. cmake --build _build -- -j8
+10. cmake -B _build ./
+11. export MAGMA_NUM_GPUS=1
+12. pushd _build; ctest -DTEST_OMP_THREADS=8; popd
+----------
+100% tests passed, 0 tests failed out of 381
+
+Total Test time (real) = 1334.51 sec
+/mnt/d/dftbplus-23.1
+----------
+13. cmake --install _build
+Note: see "sys/gnu.cmake"
+Note: https://ccportal.ims.ac.jp/node/3454
+#--------------------------------------------------------------------------------
+Note: failed
+・sudo apt -y install libmagma-dev
+・FC=gfortran CC=gcc cmake -DLAPACK_LIBRARY="-L/usr/lib/x86_64-linux-gnu/openblas-pthread -lopenblas" -DBLAS_LIBRARY="-L/usr/lib/x86_64-linux-gnu/openblas-pthread -llapack -lblas" -DMAGMA_LIBRARY="-lm -L/usr/local/magma/lib -lmagma_sparse -lmagma -L/usr/local/cuda/lib64 -lcublas -lcudart -lcusparse" -DCMAKE_INSTALL_PREFIX="/mnt/d/dftbplus-23.1/dftb+" -Wno-dev -B _build ./
+・Error in magma_getdevice_arch: MAGMA not initialized (call magma_init() first) or bad device
+At line 2128 of file /mnt/d/dftbplus-23.1/src/dftbp/math/eigensolver.F90
+Fortran runtime error: End of record
+#--------------------------------------------------------------------------------
+
+## DFTB+ Environment settings
+0. cd ~
+1. echo '# DFTB+ v.23.1 environment settings' >> ~/.bashrc
+2. echo 'export PATH=$PATH:$HOME/dftbplus-23.1/dftb+/bin' >> ~/.bashrc
+3. echo 'export PATH=$PATH:$HOME/dftbplus-23.1/dftb+/lib' >> ~/.bashrc
+4. echo 'export PATH=$PATH:$HOME/dftbplus-23.1/dftb+/include' >> ~/.bashrc
+5. echo 'export PATH=$PATH:$HOME/dftbplus-23.1/tools/misc' >> ~/.bashrc
+6. bash
+Note: $HOME = ~
+
+## PC specifications used for DFTB+ v.23.1 calculations
+---------- ----------- -----------
+OS: Microsoft Windows 11 Home 64 bit
+BIOS: 1.14.0
+CPU： 12th Gen Intel(R) Core(TM) i7-12700
+Base Board：0R6PCT (A01)
+Memory：32 GB
+GPU: NVIDIA GeForce RTX3070
+WSL2: VERSION="22.04.1 LTS (Jammy Jellyfish)"
+Python 3.10.12
+---------- ----------- -----------
+#---------------------------------------------------------------------

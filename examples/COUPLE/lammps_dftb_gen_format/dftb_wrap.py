@@ -174,7 +174,6 @@ def vasprun_read():
   #print(fout)
 
   start_reading = False
-  s_flag = 0
   with open('results.tag', 'r') as file:
     for line in file:
       flag_line = line.split(":")
@@ -183,13 +182,12 @@ def vasprun_read():
         start_reading = True
         continue
       if start_reading and flag_line[0] == 'cell_volume':
-        s_flag = 1
         break
       if start_reading:
         sxyz = line.strip().split()
         sxyz = [float(value) for value in sxyz]
         stensor.append(sxyz)
-  if s_flag == 1:
+  if start_reading:
     sxx = stensor[0][0]
     syy = stensor[1][1]
     szz = stensor[2][2]
