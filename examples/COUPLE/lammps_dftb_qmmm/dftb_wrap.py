@@ -151,7 +151,7 @@ def vasprun_read():
   # detailed.out version
   #-------------------------------------------------------------------
 
-  eunitconv=1.0/0.367493245336341E-01
+  eunitconv=0.367493245336341E-01 # Ha => eV
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
@@ -173,7 +173,7 @@ def vasprun_read():
   stensor = []
   qout = []
   
-  funitconv=1.0/0.194469064593167E-01
+  funitconv=0.194469064593167E-01 # Ha/Bohr => eV/Angstrom
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
@@ -196,7 +196,7 @@ def vasprun_read():
       #  print(flag_line[0])
   #print(fout)
 
-  sunitconv=1.0/0.367493245336341E-01
+  sunitconv=0.339893208050290E-13 # au => Pa
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
@@ -250,7 +250,7 @@ def vasprun_read():
   #-------------------------------------------------------------------
   # detailed.out version
   #-------------------------------------------------------------------
-#  eunitconv=1.0/0.367493245336341E-01
+#  eunitconv=0.367493245336341E-01
 #  search_term="Total Mermin free energy:"
 #  with open('detailed.out', 'r') as file:
 #    for line in file:
@@ -263,7 +263,7 @@ def vasprun_read():
 #  sout = []
 #  stensor = []
 #  
-#  funitconv=1.0/0.194469064593167E-01
+#  funitconv=0.194469064593167E-01
 #  start_reading = False
 #  with open('detailed.out', 'r') as file:
 #    for line in file:
@@ -279,7 +279,7 @@ def vasprun_read():
 #        fout += fxyz
   #print(fout)
 #
-#  sunitconv=1.0/0.367493245336341E-01
+#  sunitconv=0.339893208050290E-13 # au => Pa
 #  start_reading = False
 #  with open('detailed.out', 'r') as file:
 #    for line in file:
@@ -439,7 +439,7 @@ while 1:
 
   # convert VASP kilobars to bars
 
-  for i,value in enumerate(virial): virial[i] *= 1000.0
+  for i,value in enumerate(virial): virial[i] *= 100.0*1000.0 # Pa to bars (1 bar = 0.1 MPa = 100 kPa)
     
   # return forces, energy, pressure, charge to client
   
