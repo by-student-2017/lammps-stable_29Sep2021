@@ -17,6 +17,16 @@ Note: https://github.com/lammps/lammps/releases/tag/stable_29Sep2021 (The most s
 
 Note: (modified) lammps-couple/src/MESSAGE (fix_client_md.cpp:Line 36 & void FixClientMD::receive_fev(int vflag), and server_md.cpp:Line 40)
 
+lammps_dftb_efield: Add electric field (CPU or GPU for DFTB+)
+
+lammps_dftb_gen_format: gen format (CPU or GPU for DFTB+)
+
+lammps_dftb_qmmm: QM/MM (gen format) (CPU or GPU for DFTB+)
+
+CPU case in DFTB+ (dftb_in.hsd or dftb_in_tmp.hsd): Solver = RelativelyRobust {}
+
+GPU (MAGMA) case in DFTB+ (dftb_in.hsd or dftb_in_tmp.hsd): Solver = MAGMA {}
+
 ----------------------------------------------------------------------
 This directory has examples of how to use LAMMPS as a library, either
 by itself or in tandem with another code or library.
