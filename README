@@ -9,6 +9,16 @@ fortran_dftb: This example code only allows one atomic species, so "simple.f90" 
 
 lammps_nwchem: We have improved the "atomic_style" to use "charge" in anticipation of use in battery materials. Change the "lammps_nwchem" from lammps-29Oct20 (lammps-29Oct2020.tar.gz). I haven't tried it, but it's highly likely that it will work with lammps-29Oct20 as well. It may also work with the latest lammps version that officially includes "lammps_nwchem" (I haven't tried it).
 
+lammps_dftb_efield: Add electric field (CPU or GPU for DFTB+)
+
+lammps_dftb_gen_format: gen format (CPU or GPU for DFTB+)
+
+lammps_dftb_qmmm: QM/MM (gen format) (CPU or GPU for DFTB+)
+
+GPU (MAGMA) case in DFTB+ (dftb_in.hsd or dftb_in_tmp.hsd): Solver = MAGMA {}
+
+CPU case in DFTB+ (dftb_in.hsd or dftb_in_tmp.hsd): Solver = RelativelyRobust {}
+
 Although it depends on the GPU and environment, OpenMP may perform faster calculations. Therefore, it is a good idea to consider using DFTBP (https://github.com/by-student-2017/DFTBP).
 
 Note: version older than stable_23Jun2022 (The reason is "enhancements and additions for the MDI package. This obsoletes the MESSAGE package.")
@@ -17,15 +27,7 @@ Note: https://github.com/lammps/lammps/releases/tag/stable_29Sep2021 (The most s
 
 Note: (modified) lammps-couple/src/MESSAGE (fix_client_md.cpp:Line 36 & void FixClientMD::receive_fev(int vflag), and server_md.cpp:Line 40)
 
-lammps_dftb_efield: Add electric field (CPU or GPU for DFTB+)
-
-lammps_dftb_gen_format: gen format (CPU or GPU for DFTB+)
-
-lammps_dftb_qmmm: QM/MM (gen format) (CPU or GPU for DFTB+)
-
-CPU case in DFTB+ (dftb_in.hsd or dftb_in_tmp.hsd): Solver = RelativelyRobust {}
-
-GPU (MAGMA) case in DFTB+ (dftb_in.hsd or dftb_in_tmp.hsd): Solver = MAGMA {}
+Note: DFTB+ installation of GPU (MAGMA) case: https://www5.hp-ez.com/hp/calculations/page518
 
 ----------------------------------------------------------------------
 This directory has examples of how to use LAMMPS as a library, either
