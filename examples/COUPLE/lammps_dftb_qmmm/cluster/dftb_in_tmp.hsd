@@ -70,7 +70,7 @@ Hamiltonian = DFTB {
   #ThirdOrderFull = No
   ForceEvaluation = "Traditional"
   Filling = Fermi {
-    Temperature = 100.0000000000000000
+    Temperature = 0.0000000000000000
   }
 }
 Options = {
