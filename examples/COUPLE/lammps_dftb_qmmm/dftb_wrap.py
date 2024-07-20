@@ -250,18 +250,20 @@ def vasprun_read():
   #-------------------------------------------------------------------
   # detailed.out version
   #-------------------------------------------------------------------
+#  eunitconv=1.0/0.367493245336341E-01
 #  search_term="Total Mermin free energy:"
 #  with open('detailed.out', 'r') as file:
 #    for line in file:
 #      if re.search(search_term, line):
 #         values = line.strip().split()
-#         eout = float(values[6])
+#         eout = float(values[6])*eunitconv
   #print(eout)
 #
 #  fout = []
 #  sout = []
 #  stensor = []
 #  
+#  funitconv=1.0/0.194469064593167E-01
 #  start_reading = False
 #  with open('detailed.out', 'r') as file:
 #    for line in file:
@@ -273,10 +275,11 @@ def vasprun_read():
 #      if start_reading:
 #        force = line.strip().split()
 #        fxyz = force[1:]
-#        fxyz = [float(value) for value in fxyz]
+#        fxyz = [float(value)*funitconv for value in fxyz]
 #        fout += fxyz
   #print(fout)
 #
+#  sunitconv=1.0/0.367493245336341E-01
 #  start_reading = False
 #  with open('detailed.out', 'r') as file:
 #    for line in file:
@@ -287,7 +290,7 @@ def vasprun_read():
 #        break
 #      if start_reading:
 #        sxyz = line.strip().split()
-#        sxyz = [float(value) for value in sxyz]
+#        sxyz = [float(value)*sunitconv for value in sxyz]
 #        stensor.append(sxyz)
 #  sxx = stensor[0][0]
 #  syy = stensor[1][1]
