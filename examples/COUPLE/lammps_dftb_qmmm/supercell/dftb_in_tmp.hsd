@@ -69,10 +69,11 @@ Hamiltonian = DFTB {
   #ThirdOrder = No
   #ThirdOrderFull = No
   ForceEvaluation = "Traditional"
-  Filling = Fermi {
-    Temperature = 0.0000000000000000
-    IndependentKFilling = No
+  Filling = MethfesselPaxton {
+    Order = 2
+    Temperature [eV] = 0.02
   }
+  Mixer = Broyden {} # Anderson {}, DIIS {} or Simple {}
 }
 Options = {
   WriteAutotestTag = No
