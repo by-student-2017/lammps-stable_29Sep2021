@@ -151,7 +151,7 @@ def vasprun_read():
   # detailed.out version
   #-------------------------------------------------------------------
 
-  eunitconv=1.0/0.367493245336341E-01 # Ha => eV
+  eunitconv=1.0/0.367493245336341E-01
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
@@ -173,7 +173,7 @@ def vasprun_read():
   stensor = []
   qout = []
   
-  funitconv=1.0/0.194469064593167E-01 # Ha/Bohr => eV/Angstrom
+  funitconv=1.0/0.194469064593167E-01
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
@@ -188,7 +188,9 @@ def vasprun_read():
         break
       if start_reading and flag_line[0] == 'orbital_charges':
         break
-      if start_reading and flag_line[0] != 'forces_ext_charges':
+      if start_reading and flag_line[0] == 'forces_ext_charges':
+        pass
+      if start_reading:
         fxyz = line.strip().split()
         fxyz = [float(value)*funitconv for value in fxyz]
         fout += fxyz
@@ -196,7 +198,7 @@ def vasprun_read():
       #  print(flag_line[0])
   #print(fout)
 
-  sunitconv=1.0/0.339893208050290E-13 # au => Pa
+  sunitconv=1.0/0.339893208050290E-13
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
@@ -263,7 +265,7 @@ def vasprun_read():
 #  sout = []
 #  stensor = []
 #  
-#  funitconv=0.194469064593167E-01
+#  funitconv=1.0/0.194469064593167E-01
 #  start_reading = False
 #  with open('detailed.out', 'r') as file:
 #    for line in file:
@@ -279,7 +281,7 @@ def vasprun_read():
 #        fout += fxyz
   #print(fout)
 #
-#  sunitconv=0.339893208050290E-13 # au => Pa
+#  sunitconv=0.339893208050290E-13
 #  start_reading = False
 #  with open('detailed.out', 'r') as file:
 #    for line in file:
