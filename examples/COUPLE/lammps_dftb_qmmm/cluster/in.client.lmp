@@ -25,8 +25,10 @@ atom_modify     sort 0 0.0 map yes
 variable Tini equal 273+25.0 # [K] (Initial temperature)
 variable Tfin equal 273+25.0 # [K] (Annealing temperature)
 
-variable Nout equal 10 # every 10 time steps to the specified file
-variable Nh2o equal 20 # set the number of waters (Due to minimize settings, an even number is required)
+variable Nout equal  10 # every 10 time steps to the specified file
+variable Nh2o equal  30 # set the number of waters (Due to minimize settings, an even number is required)
+
+variable tdump equal 50 # dumping factor
 
 variable elem string "C O H Ow Hw"
 
@@ -41,11 +43,24 @@ pair_coeff 4 4 lj/cut $(0.1553*0.04336125) 3.166 # O-O
 pair_coeff 4 5 lj/cut 0.0 1.0 # O-H
 pair_coeff 5 5 lj/cut 0.0 1.0 # H-H
 
-bond_style harmonic
-bond_coeff 1 $(80.0*0.04336125) 1.0 # the r0 of O-H bond [Angstrom]
+#-------------------------------------------------------------------
+# not shake
 
-angle_style harmonic
-angle_coeff 1 $(300.0*0.04336125) 109.47 # the theta0 of H-O-H angle [degree]
+#bond_style harmonic
+#bond_coeff 1 $(80.0*0.04336125) 1.0 # the r0 of O-H bond [Angstrom]
+
+#angle_style harmonic
+#angle_coeff 1 $(300.0*0.04336125) 109.47 # the theta0 of H-O-H angle [degree]
+
+#-------------------------------------------------------------------
+# shake method
+
+bond_style zero
+bond_coeff 1 1.0
+
+angle_style zero
+angle_coeff 1 109.47
+#-------------------------------------------------------------------
 
 region box block INF INF  INF INF  INF INF
 molecule water spce.mol # yes-RIGID
@@ -53,22 +68,25 @@ create_atoms 0 random ${Nh2o} 12345 box mol water 1
 
 #-------------------- Settings -----------------------------------------------------------
 
-mass 3 2.00 # H => D (Make the hydrogen heavier to increase the timestep)
+#mass 3 2.00 # H => D (Make the hydrogen heavier to increase the timestep)
 
-#group main  id <= 21 # e.g., use dump settings
-#group water id >= 22
+group main  id <= 21 # e.g., use dump settings
+group water id >= 22
 
 neighbor        2.0 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
 neigh_modify    delay 0 every 10 check no
 comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
 
 thermo          ${Nout} # computes and prints thermodynamic 
-thermo_style custom step temp pe etotal press vol density # specifies content of thermodynamic data to be printed in screen
+thermo_style custom step temp pe etotal ecoul press vol density # specifies content of thermodynamic data to be printed in screen
 
 velocity        all create ${Tini} 123456 loop geom # sets the velocity of a group of atoms
 
-fix             f0 all client/md
-fix_modify      f0 energy yes # or 2 virial yes
+#fix             f1 all nve
+fix             f2 all client/md
+fix_modify      f2 energy yes # or 2 virial yes
+#fix             f3 all temp/berendsen ${Tini} ${Tfin} $(v_tdump*dt)
+#fix             f3 all langevin ${Tini} ${Tfin} $(v_tdump*dt) 12345
 
 #-------------------- Energy minimization ------------------------------------------------
 minimize 1.0e-4 1.0e-6 $(50+v_Nh2o/2) 1000
@@ -76,11 +94,13 @@ minimize 1.0e-4 1.0e-6 $(50+v_Nh2o/2) 1000
 #-------------------- Run the simulation -------------------------------------------------
 reset_timestep 0
 
-timestep        $(0.001*0.25) # 0.25 [fs] (Recommend 0.1-0.5 [fs]), sets the timestep for subsequent simulations
+timestep        $(0.001*0.025) # 0.025 [fs]
+
+fix rigid water shake 0.0001 20 0 b 1 a 1
 
 # Equilibrium system, calculation settings
-fix integrate all nvt temp ${Tini} ${Tfin} $(10*dt)
-#fix integrate all npt temp ${Tini} ${Tfin} $(10*dt) iso 1.0 1.0 $(100*dt)
+fix integrate all nvt temp ${Tini} ${Tfin} $(v_tdump*dt)
+#fix integrate all npt temp ${Tini} ${Tfin} $(v_tdump*dt) iso 1.0 1.0 $(v_tdump*10*dt)
 
 #-------------------- 
 dump            d1 all cfg ${Nout} cfg/run.*.cfg mass type xs ys zs id type q

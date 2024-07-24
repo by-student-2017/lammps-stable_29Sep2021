@@ -21,10 +21,12 @@ atom_modify     sort 0 0.0 map yes
 
 #-----------------------------------------------------------------------------------------
 variable Tini equal 273+25.0 # [K] (Initial temperature)
-variable Tfin equal 273+85.0 # [K] (Annealing temperature)
+variable Tfin equal 273+25.0 # [K] (Annealing temperature)
 
 variable Nout equal  10 # every 10 time steps to the specified file
 variable Nh2o equal  30 # set the number of waters (Due to minimize settings, an even number is required)
+
+variable tdump equal 50 # dumping factor
 
 variable elem string "C O H Ow Hw"
 
@@ -54,13 +56,24 @@ pair_coeff 4 4 lj/cut 0.0067340021249999992836 3.166
 pair_coeff 4 5 lj/cut 0.0 1.0 # O-H
 pair_coeff 5 5 lj/cut 0.0 1.0 # H-H
 
-bond_style harmonic
-bond_coeff 1 $(80.0*0.04336125) 1.0 # the r0 of O-H bond [Angstrom]
-bond_coeff 1 3.4688999999999996504 1.0 
+#-------------------------------------------------------------------
+# not shake
 
-angle_style harmonic
-angle_coeff 1 $(300.0*0.04336125) 109.47 # the theta0 of H-O-H angle [degree]
-angle_coeff 1 13.008374999999999133 109.47 
+#bond_style harmonic
+#bond_coeff 1 $(80.0*0.04336125) 1.0 # the r0 of O-H bond [Angstrom]
+
+#angle_style harmonic
+#angle_coeff 1 $(300.0*0.04336125) 109.47 # the theta0 of H-O-H angle [degree]
+
+#-------------------------------------------------------------------
+# shake method
+
+bond_style zero
+bond_coeff 1 1.0
+
+angle_style zero
+angle_coeff 1 109.47
+#-------------------------------------------------------------------
 
 region box block INF INF  INF INF  INF INF
 molecule water spce.mol # yes-RIGID
@@ -80,10 +93,12 @@ Created 90 atoms
 
 #-------------------- Settings -----------------------------------------------------------
 
-mass 3 2.00 # H => D (Make the hydrogen heavier to increase the timestep)
+#mass 3 2.00 # H => D (Make the hydrogen heavier to increase the timestep)
 
-#group main  id <= 21 # e.g., use dump settings
-#group water id >= 22
+group main  id <= 21 # e.g., use dump settings
+21 atoms in group main
+group water id >= 22
+90 atoms in group water
 
 neighbor        2.0 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
 neigh_modify    delay 0 every 10 check no
@@ -99,7 +114,8 @@ velocity        all create 298 123456 loop geom
 #fix             f1 all nve
 fix             f2 all client/md
 fix_modify      f2 energy yes # or 2 virial yes
-#fix             f3 all langevin ${Tini} ${Tfin} $(10*dt) 12345
+#fix             f3 all temp/berendsen ${Tini} ${Tfin} $(v_tdump*dt)
+#fix             f3 all langevin ${Tini} ${Tfin} $(v_tdump*dt) 12345
 
 #-------------------- Energy minimization ------------------------------------------------
 minimize 1.0e-4 1.0e-6 $(50+v_Nh2o/2) 1000
@@ -125,42 +141,42 @@ Neighbor list info ...
 WARNING: Communication cutoff adjusted to 12 (../comm.cpp:739)
 Per MPI rank memory allocation (min/avg/max) = 8.236 | 8.236 | 8.236 Mbytes
 Step Temp PotEng TotEng E_coul Press Volume Density 
-       0          298    3681.0551    3685.2923            0    3321628.3    8474.6109   0.13726841 
-      10          298   -698.57756   -694.34041            0    3710.6372    8474.6109   0.13726841 
-      19          298   -704.04944   -699.81229            0    869.74838    8474.5677   0.13726911 
-Loop time of 63.0228 on 1 procs for 19 steps with 111 atoms
+       0          298    3681.0551    3685.2923            0    3321628.3    8474.6109   0.13532454 
+      10          298   -702.80222   -698.56507            0      1874.73    8474.6109   0.13532454 
+      14          298   -704.20041   -699.96326            0    751.83416    8474.4883    0.1353265 
+Loop time of 41.8455 on 1 procs for 14 steps with 111 atoms
 
 0.0% CPU use with 1 MPI tasks x no OpenMP threads
 
 Minimization stats:
   Stopping criterion = energy tolerance
   Energy initial, next-to-last, final = 
-      3681.05512958056  -703.985508235512  -704.049437936201
-  Force two-norm initial, final = 62365.202 2.9156842
-  Force max component initial, final = 42872.364 0.90149397
-  Final line search alpha, max atom move = 0.050904260 0.045889883
-  Iterations, force evaluations = 19 26
+      3681.05512957868  -704.139519106581  -704.200411304797
+  Force two-norm initial, final = 62365.202 1.2075362
+  Force max component initial, final = 42872.364 0.59018228
+  Final line search alpha, max atom move = 0.089312320 0.052710548
+  Iterations, force evaluations = 14 17
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 0.00099166 | 0.00099166 | 0.00099166 |   0.0 |  0.00
-Bond    | 0.00014841 | 0.00014841 | 0.00014841 |   0.0 |  0.00
-Neigh   | 5.2767e-05 | 5.2767e-05 | 5.2767e-05 |   0.0 |  0.00
-Comm    | 2.7997e-05 | 2.7997e-05 | 2.7997e-05 |   0.0 |  0.00
-Output  | 4.4949e-05 | 4.4949e-05 | 4.4949e-05 |   0.0 |  0.00
-Modify  | 63.021     | 63.021     | 63.021     |   0.0 |100.00
-Other   |            | 0.0003975  |            |       |  0.00
+Pair    | 0.00064871 | 0.00064871 | 0.00064871 |   0.0 |  0.00
+Bond    | 2.6857e-05 | 2.6857e-05 | 2.6857e-05 |   0.0 |  0.00
+Neigh   | 9.258e-05  | 9.258e-05  | 9.258e-05  |   0.0 |  0.00
+Comm    | 2.0629e-05 | 2.0629e-05 | 2.0629e-05 |   0.0 |  0.00
+Output  | 5.3342e-05 | 5.3342e-05 | 5.3342e-05 |   0.0 |  0.00
+Modify  | 41.844     | 41.844     | 41.844     |   0.0 |100.00
+Other   |            | 0.0002714  |            |       |  0.00
 
 Nlocal:        111.000 ave         111 max         111 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Nghost:         0.00000 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Neighs:        1784.00 ave        1784 max        1784 min
+Neighs:        1782.00 ave        1782 max        1782 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 1784
-Ave neighs/atom = 16.072072
+Total # of neighbors = 1782
+Ave neighs/atom = 16.054054
 Ave special neighs/atom = 1.6216216
 Neighbor list builds = 1
 Dangerous builds not checked
@@ -168,15 +184,22 @@ Dangerous builds not checked
 #-------------------- Run the simulation -------------------------------------------------
 reset_timestep 0
 
-timestep        $(0.001*0.25) # 0.25 [fs] (Recommend 0.1-0.5 [fs]), sets the timestep for subsequent simulations
-timestep        0.0002500000000000000052 
+timestep        $(0.001*0.025) # 0.025 [fs]
+timestep        2.5000000000000001198e-05 
+
+fix rigid water shake 0.0001 20 0 b 1 a 1
+       0 = # of size 2 clusters
+       0 = # of size 3 clusters
+       0 = # of size 4 clusters
+      30 = # of frozen angles
+  find clusters CPU = 0.000 seconds
 
 # Equilibrium system, calculation settings
-fix integrate all nvt temp ${Tini} ${Tfin} $(50*dt)
-fix integrate all nvt temp 298 ${Tfin} $(50*dt)
-fix integrate all nvt temp 298 358 $(50*dt)
-fix integrate all nvt temp 298 358 0.012500000000000000694
-#fix integrate all npt temp ${Tini} ${Tfin} $(50*dt) iso 1.0 1.0 $(500*dt)
+fix integrate all nvt temp ${Tini} ${Tfin} $(v_tdump*dt)
+fix integrate all nvt temp 298 ${Tfin} $(v_tdump*dt)
+fix integrate all nvt temp 298 298 $(v_tdump*dt)
+fix integrate all nvt temp 298 298 0.001250000000000000026
+#fix integrate all npt temp ${Tini} ${Tfin} $(v_tdump*dt) iso 1.0 1.0 $(v_tdump*10*dt)
 
 #--------------------
 dump            d1 all cfg ${Nout} cfg/run.*.cfg mass type xs ys zs id type q
@@ -190,47 +213,47 @@ dump_modify     d1 element C O H Ow Hw
 
 run             100
 WARNING: Communication cutoff adjusted to 12 (../comm.cpp:739)
-Per MPI rank memory allocation (min/avg/max) = 7.868 | 7.868 | 7.868 Mbytes
+Per MPI rank memory allocation (min/avg/max) = 8.743 | 8.743 | 8.743 Mbytes
 Step Temp PotEng TotEng E_coul Press Volume Density 
-       0          298   -704.04944   -699.81229            0    869.67971    8475.2369   0.13725827 
-      10    231.51263   -703.09055   -699.79877            0    464.92383    8527.5914   0.13641558 
-      20    219.89922   -702.86505   -699.73839            0    147.13126    8568.4806    0.1357646 
-      30    222.49241   -702.77214   -699.60861            0    5.4031167    8591.7799   0.13539643 
-      40    264.13239   -703.14188   -699.38629            0    127.59348    8598.1823   0.13529561 
-      50    310.50851   -703.59035   -699.17535            0    365.28598    8589.3987   0.13543397 
-      60    269.45308   -702.84633   -699.01508            0    447.66234    8572.5295   0.13570048 
-      70    284.48954   -702.93658   -698.89153            0    614.17503    8563.9099   0.13583706 
-      80    285.10122   -702.80406   -698.75031            0    726.58909    8565.1166   0.13581792 
-      90    358.29747    -703.6697    -698.5752            0    845.32346    8570.8946   0.13572636 
-     100    355.62662   -703.47784   -698.42132            0    600.18724    8589.2822    0.1354358 
-Loop time of 240.463 on 1 procs for 100 steps with 111 atoms
+       0       409.75   -704.20041   -699.96326            0    -99254.98    8474.1605   0.13533173 
+      10    275.34206   -704.09428   -701.24702            0      494.213    8479.2198   0.13525098 
+      20    276.61792   -704.08593   -701.22547            0    493.86995    8482.1488   0.13520428 
+      30    279.02191   -704.07001    -701.1847            0    493.87008    8485.0503   0.13515804 
+      40      282.837   -704.04746   -701.12269            0    494.43254    8487.9336   0.13511213 
+      50    288.41578   -704.01951   -701.03705            0    495.84943    8490.8081   0.13506639 
+      60    296.01364   -703.98768   -700.92666            0    498.34426    8493.6837   0.13502066 
+      70    305.47323    -703.9537   -700.79486            0    501.87551    8496.5683   0.13497482 
+      80    315.91276   -703.91971   -700.65291            0    505.91229     8499.466   0.13492881 
+      90     325.8079    -703.8876   -700.51848            0    509.52012    8502.3735   0.13488267 
+     100    333.59892   -703.85937   -700.40969            0    511.76976    8505.2795   0.13483658 
+Loop time of 226.908 on 1 procs for 100 steps with 111 atoms
 
-Performance: 0.009 ns/day, 2671.812 hours/ns, 0.416 timesteps/s
+Performance: 0.001 ns/day, 25212.005 hours/ns, 0.441 timesteps/s
 0.0% CPU use with 1 MPI tasks x no OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 0.0025198  | 0.0025198  | 0.0025198  |   0.0 |  0.00
-Bond    | 0.00040303 | 0.00040303 | 0.00040303 |   0.0 |  0.00
-Neigh   | 0.00086047 | 0.00086047 | 0.00086047 |   0.0 |  0.00
-Comm    | 0.00010898 | 0.00010898 | 0.00010898 |   0.0 |  0.00
-Output  | 0.018529   | 0.018529   | 0.018529   |   0.0 |  0.01
-Modify  | 240.44     | 240.44     | 240.44     |   0.0 | 99.99
-Other   |            | 0.0002647  |            |       |  0.00
+Pair    | 0.0027361  | 0.0027361  | 0.0027361  |   0.0 |  0.00
+Bond    | 0.00011291 | 0.00011291 | 0.00011291 |   0.0 |  0.00
+Neigh   | 0.00069643 | 0.00069643 | 0.00069643 |   0.0 |  0.00
+Comm    | 0.00010199 | 0.00010199 | 0.00010199 |   0.0 |  0.00
+Output  | 0.015553   | 0.015553   | 0.015553   |   0.0 |  0.01
+Modify  | 226.89     | 226.89     | 226.89     |   0.0 | 99.99
+Other   |            | 0.0002679  |            |       |  0.00
 
 Nlocal:        111.000 ave         111 max         111 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Nghost:         0.00000 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Neighs:        1770.00 ave        1770 max        1770 min
+Neighs:        1778.00 ave        1778 max        1778 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 1770
-Ave neighs/atom = 15.945946
+Total # of neighbors = 1778
+Ave neighs/atom = 16.018018
 Ave special neighs/atom = 1.6216216
 Neighbor list builds = 10
 Dangerous builds not checked
 
 #-------------------- End ----------------------------------------------------------------
-Total wall time: 0:05:09
+Total wall time: 0:04:33
