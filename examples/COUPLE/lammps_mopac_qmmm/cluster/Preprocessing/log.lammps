@@ -1,0 +1,90 @@
+LAMMPS (29 Sep 2021)
+#-----------------------------------------------------------------------------------------
+# The one molecule in water for use with DFTB+
+# test: lammps-stable_29Sep2021
+#-------------------- Initialization -----------------------------------------------------
+clear
+echo            both    # echoes each input script command to both log file and screen
+#-----------------------------------------------------------------------------------------
+
+variable  Nh2o equal 70 # create the number of waters
+
+#-----------------------------------------------------------------------------------------
+units           metal
+dimension       3
+boundary        p p p # for (C)luster of DFTB+
+atom_style      full  # yes-MOLECULE
+atom_modify     sort 0 0.0 map yes
+
+#-------------------- Atom & Lattice description ----------------------------------------
+read_data data.lammps extra/bond/per/atom 2 extra/angle/per/atom 1 extra/special/per/atom 2
+Reading data file ...
+  orthogonal box = (0.0000000 0.0000000 0.0000000) to (20.000000 20.000000 20.000000)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  21 atoms
+Finding 1-2 1-3 1-4 neighbors ...
+  special bond factors lj:    0        0        0       
+  special bond factors coul:  0        0        0       
+     0 = max # of 1-2 neighbors
+     0 = max # of 1-3 neighbors
+     0 = max # of 1-4 neighbors
+     3 = max # of special neighbors
+  special bonds CPU = 0.000 seconds
+  read_data CPU = 0.006 seconds
+# extra for H2O
+
+#-------------------- pair style settings --------------------------------
+pair_style hybrid/overlay zero 1.0 lj/cut 10.0
+pair_coeff * * zero 1.0
+pair_coeff 4 4 lj/cut $(0.1553*0.04336125) 3.166 # O-O
+pair_coeff 4 4 lj/cut 0.0067340021249999992836 3.166 
+pair_coeff 4 5 lj/cut 0.0 1.0 # O-H
+pair_coeff 5 5 lj/cut 0.0 1.0 # H-H
+
+bond_style harmonic
+bond_coeff 1 $(80.0*0.04336125) 1.0 # the r0 of O-H bond [Angstrom]
+bond_coeff 1 3.4688999999999996504 1.0 
+
+angle_style harmonic
+angle_coeff 1 $(300.0*0.04336125) 109.47 # the theta0 of H-O-H angle [degree]
+angle_coeff 1 13.008374999999999133 109.47 
+
+region box block INF INF  INF INF  INF INF
+molecule water spce.mol # yes-RIGID
+Read molecule template water:
+  1 molecules
+  0 fragments
+  3 atoms with max type 5
+  2 bonds with max type 1
+  1 angles with max type 1
+  0 dihedrals with max type 0
+  0 impropers with max type 0
+create_atoms 0 random ${Nh2o} 12345 box mol water 1
+create_atoms 0 random 70 12345 box mol water 1
+Created 210 atoms
+  using lattice units in orthogonal box = (0.0000000 0.0000000 0.0000000) to (20.000000 20.000000 20.000000)
+  create_atoms CPU = 0.001 seconds
+
+write_data data_in_water.lammps
+System init for write_data ...
+Neighbor list info ...
+  update every 1 steps, delay 10 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 12
+  ghost atom cutoff = 12
+  binsize = 6, bins = 4 4 4
+  2 neighbor lists, perpetual/occasional/extra = 2 0 0
+  (1) pair zero, perpetual
+      attributes: half, newton on
+      pair build: half/bin/newton
+      stencil: half/bin/3d
+      bin: standard
+  (2) pair lj/cut, perpetual, skip from (1)
+      attributes: half, newton on
+      pair build: skip
+      stencil: none
+      bin: none
+
+#-------------------- End ----------------------------------------------------------------
+Total wall time: 0:00:00
