@@ -28,7 +28,7 @@ variable Tfin equal 273+25.0 # [K] (Annealing temperature)
 variable Nout equal  10 # every 10 time steps to the specified file
 variable Nh2o equal  30 # set the number of waters (Due to minimize settings, an even number is required)
 
-variable tdump equal 20 # dumping factor
+variable tdump equal 50 # dumping factor
 
 variable elem string "C O H Ow Hw"
 
