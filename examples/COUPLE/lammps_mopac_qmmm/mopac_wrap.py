@@ -198,9 +198,6 @@ def vasprun_read():
   with open('in.aux', 'r') as file:
     for line in file:
       line_list = re.split(r"[:=\[\]]", line.strip("\n").strip())
-      if 'GRADIENTS' in line_list[0]:
-        start_reading = True
-        continue
       if start_reading and line_list[0] == 'OVERLAP_MATRIX':
         break
       if start_reading:
@@ -208,7 +205,9 @@ def vasprun_read():
         fxyz = [float(value)*funitconv for value in fxyz]
         fout += fxyz
       #else:
-      #  print(flag_line[0])
+      if 'GRADIENTS' in line_list[0]:
+        start_reading = True
+        continue
   #print(fout)
 
 #  sunitconv=1.0/0.339893208050290E-13
@@ -216,9 +215,6 @@ def vasprun_read():
 #  with open('results.tag', 'r') as file:
 #    for line in file:
 #      line_list = re.split(r"[:=\[\]]", line.strip("\n").strip())
-#      if 'stress' in line_list[0]:
-#        start_reading = True
-#        continue
 #      if start_reading and line_list[0] == 'forces_ext_charges':
 #        break
 #      if start_reading and line_list[0] == 'cell_volume':
@@ -229,6 +225,9 @@ def vasprun_read():
 #        sxyz = line.strip().split()
 #        sxyz = [float(value)*sunitconv for value in sxyz]
 #        stensor.append(sxyz)
+#      if 'stress' in line_list[0]:
+#        start_reading = True
+#        continue
 #  if start_reading:
 #    sxx = stensor[0][0]
 #    syy = stensor[1][1]
@@ -247,15 +246,15 @@ def vasprun_read():
   with open('in.aux', 'r') as file:
     for line in file:
       line_list = re.split(r"[:=\[\]]", line.strip("\n").strip())
-      if 'ATOM_CHARGES' in line_list[0]:
-        start_reading = True
-        continue
       if start_reading and line_list[0] == 'AO_CHARGES':
         break
       if start_reading:
         qxyz = line.strip().split()
         qxyz = [float(value) for value in qxyz]
         qout += qxyz
+      if 'ATOM_CHARGES' in line_list[0]:
+        start_reading = True
+        continue
   #print(qout)
   #-------------------------------------------------------------------
   
