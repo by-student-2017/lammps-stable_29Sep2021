@@ -411,6 +411,14 @@ while 1:
       fyj += -fcq*( (yi-yj)/r ) # eV/Angstrom
       fzj += -fcq*( (zi-zj)/r ) # eV/Angstrom
       #energy += funitconv*(coulomb_constants*qi*qj/r) # eV
+      # the electron-electron part of Hartree-Fock equation
+      # for i in range(nq):
+      #   for j in range(i+1,nq):
+      #     energy += funitconv*(coulomb_constants*qi*qj/r)
+      # This part is already included in the form of potential in 
+      # the last column of the "mol.in" file in MOPAC, 
+      # so no calculation is necessary.
+      # Please correct me if I'm wrong.
     #-----------------------------------------------------
     forces += [fxj,fyj,fzj]
   
