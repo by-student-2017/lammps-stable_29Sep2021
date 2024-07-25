@@ -37,14 +37,15 @@ read_data data.lammps extra/bond/per/atom 2 extra/angle/per/atom 1 extra/special
 # extra for H2O
 
 #-------------------- pair style settings --------------------------------
-pair_style hybrid/overlay zero 1.0 lj/cut/coul/cut 12.8 12.8
+pair_style hybrid/overlay zero 1.0 lj/cut 10.0 coul/cut 10.0
 pair_coeff * * zero 1.0
 
 #-----------------------------------------------------------------------------------
 # water-water
-pair_coeff 4 4 lj/cut/coul/cut $(0.1553*0.04336125) 3.166 # O-O
-pair_coeff 4 5 lj/cut/coul/cut 0.0 1.0 # O-H
-pair_coeff 5 5 lj/cut/coul/cut 0.0 1.0 # H-H
+pair_coeff 4 4 lj/cut $(0.1553*0.04336125) 3.166 # O-O
+pair_coeff 4 5 lj/cut 0.0 1.0 # O-H
+pair_coeff 5 5 lj/cut 0.0 1.0 # H-H
+pair_coeff 4*5 4*5 coul/cut
 #-----------------------------------------------------------------------------------
 
 #-----------------------------------------------------------------------------------
@@ -110,7 +111,7 @@ minimize 1.0e-4 1.0e-6 $(50+v_Nh2o/2) 1000
 #-------------------- Run the simulation -------------------------------------------------
 reset_timestep 0
 
-timestep        $(0.001*0.025) # 0.025 [fs]
+timestep        $(0.001*0.25) # 0.25 [fs]
 
 fix rigid water shake 0.0001 20 0 b 1 a 1
 
