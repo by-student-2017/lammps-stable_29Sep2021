@@ -116,7 +116,7 @@ reset_timestep 0
 variable nSCF equal 1000
 
 # Since the calculation is performed with one SCF, the time step must be reduced by the number of original SCFs.
-timestep        $(0.001*0.25/v_nSCF) # 0.25/nSCF [fs]
+timestep        $(0.001*1.0/v_nSCF) # 1.0/nSCF [fs]
 
 fix rigid water shake 0.0001 20 0 b 1 a 1
 
