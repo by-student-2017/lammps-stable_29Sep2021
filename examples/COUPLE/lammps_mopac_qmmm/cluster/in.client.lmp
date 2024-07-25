@@ -113,7 +113,7 @@ reset_timestep 0
 
 # Set the number of SCFs for symmetrical cases to be calculated by MOPAC at least on average.
 # Or set it to the maximum expected number of SCFs if you want to run it safely even if it takes a long time.
-variable nSCF equal 500
+variable nSCF equal 1000
 
 # Since the calculation is performed with one SCF, the time step must be reduced by the number of original SCFs.
 timestep        $(0.001*0.25/v_nSCF) # 0.25/nSCF [fs]
