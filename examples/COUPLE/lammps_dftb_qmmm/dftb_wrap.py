@@ -151,7 +151,7 @@ def vasprun_read():
   # detailed.out version
   #-------------------------------------------------------------------
 
-  eunitconv=1.0/0.367493245336341E-01
+  eunitconv=1.0/0.367493245336341E-01 # Ha => eV
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
@@ -173,7 +173,7 @@ def vasprun_read():
   stensor = []
   qout = []
   
-  funitconv=1.0/0.194469064593167E-01
+  funitconv=1.0/0.194469064593167E-01 # Ha/Bohr => eV/Angstrom
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
@@ -198,7 +198,7 @@ def vasprun_read():
       #  print(flag_line[0])
   #print(fout)
 
-  sunitconv=1.0/0.339893208050290E-13
+  sunitconv=1.0/0.339893208050290E-13 # au => Pa
   start_reading = False
   with open('results.tag', 'r') as file:
     for line in file:
