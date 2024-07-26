@@ -1,0 +1,41 @@
+#-----------------------------------------------------------------------------------------
+# The one molecule in water for use with DFTB+
+# test: lammps-stable_29Sep2021
+#-------------------- Initialization -----------------------------------------------------
+clear
+echo            both    # echoes each input script command to both log file and screen
+#-----------------------------------------------------------------------------------------
+
+variable  Nh2o equal 70 # create the number of waters
+
+#-----------------------------------------------------------------------------------------
+units           metal
+dimension       3
+boundary        p p p # for (C)luster of DFTB+
+atom_style      full  # yes-MOLECULE
+atom_modify     sort 0 0.0 map yes
+
+#-------------------- Atom & Lattice description ----------------------------------------
+read_data data.lammps extra/bond/per/atom 2 extra/angle/per/atom 1 extra/special/per/atom 2
+# extra for H2O
+
+#-------------------- pair style settings --------------------------------
+pair_style hybrid/overlay zero 1.0 lj/cut 10.0
+pair_coeff * * zero 1.0
+pair_coeff 4 4 lj/cut $(0.1553*0.04336125) 3.166 # O-O
+pair_coeff 4 5 lj/cut 0.0 1.0 # O-H
+pair_coeff 5 5 lj/cut 0.0 1.0 # H-H
+
+bond_style harmonic
+bond_coeff 1 $(80.0*0.04336125) 1.0 # the r0 of O-H bond [Angstrom]
+
+angle_style harmonic
+angle_coeff 1 $(300.0*0.04336125) 109.47 # the theta0 of H-O-H angle [degree]
+
+region box block INF INF  INF INF  INF INF
+molecule water spce.mol # yes-RIGID
+create_atoms 0 random ${Nh2o} 12345 box mol water 1
+
+write_data data_in_water.lammps
+
+#-------------------- End ----------------------------------------------------------------
