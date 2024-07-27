@@ -12,6 +12,8 @@ QCEngine: https://github.com/MolSSI/QCEngine (psi4)
 #---------------------------------------------------
 GAMESS(US) Ver. June 30, 2019 R1
 - AM1, PM3, PM6 ($BASIS GBASIS=PM6 $END)
+https://computerandchemistry.blogspot.com/2012/08/pm6-in-gamess-part-1.html
+QM/MM: https://pc-chem.info/applications/237 (Japanese)
 #---------------------------------------------------
 pySCF: https://github.com/pyscf/semiempirical
 #---------------------------------------------------
@@ -24,4 +26,8 @@ sparrow: https://github.com/qcscine/sparrow
 I don't service it.
 ORCA: Unfortunately, I am currently not licensed under ORCA because I am affiliated with a national research institute.
 I would like to be involved in the development and expansion without compensation. Therefore, I cannot be involved in the development of ORCA until I am affiliated with a university institution.
+#---------------------------------------------------
+
+#---------------------------------------------------
+QM/MM: https://doi.org/10.1002/wcms.1163 (Open Access)
 #---------------------------------------------------
