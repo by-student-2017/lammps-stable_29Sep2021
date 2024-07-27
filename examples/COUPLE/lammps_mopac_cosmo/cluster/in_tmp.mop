@@ -1,4 +1,4 @@
-PM6 1SCF CHARGE=0 GRAD AUX EPS=78.4
+PM6-D3H4 1SCF CHARGE=0 GRAD AUX EPS=78.4
 snapshot of MD step 0 Avogadro2 (cif ->edit-> mop)
 
 C   7.29760 1  8.20880 1  6.41250 1
