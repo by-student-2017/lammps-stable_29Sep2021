@@ -43,7 +43,7 @@ pair_coeff * *
 #mass 3 2.00 # H => D (Make the hydrogen heavier to increase the timestep)
 
 neighbor        2.0 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
-neigh_modify    delay 0 every 1 check no # neigh_modify    delay 0 every 10 check no
+neigh_modify    delay 0 every 1 check no # neigh_modify delay 0 every 10 check no
 comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
 
 thermo          ${Nout} # computes and prints thermodynamic 
