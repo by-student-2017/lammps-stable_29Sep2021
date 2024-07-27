@@ -1,0 +1,24 @@
+#---------------------------------------------------
+xTB
+
+CP2k: https://www.cp2k.org/
+
+pyseqm: https://github.com/lanl/PYSEQM
+- MNDO, AM1, PM3
+
+cuby4: http://cuby4.molecular.cz/interface_xtb.html
+
+QCEngine: https://github.com/MolSSI/QCEngine (psi4)
+#---------------------------------------------------
+pySCF: https://github.com/pyscf/semiempirical
+#---------------------------------------------------
+sparrow: https://github.com/qcscine/sparrow
+- MNDO, AM1, RM1, PM3, PM6, non-SCC DFTB (DFTB0), DFTB2, DFTB3
+- license: BSD 3-clause "New" or "Revised" License
+#---------------------------------------------------
+
+#---------------------------------------------------
+I don't service it.
+ORCA: Unfortunately, I am currently not licensed under ORCA because I am affiliated with a national research institute.
+I would like to be involved in the development and expansion without compensation. Therefore, I cannot be involved in the development of ORCA until I am affiliated with a university institution.
+#---------------------------------------------------
