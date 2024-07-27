@@ -10,6 +10,9 @@ cuby4: http://cuby4.molecular.cz/interface_xtb.html
 
 QCEngine: https://github.com/MolSSI/QCEngine (psi4)
 #---------------------------------------------------
+GAMESS(US) Ver. June 30, 2019 R1
+- AM1, PM3, PM6 ($BASIS GBASIS=PM6 $END)
+#---------------------------------------------------
 pySCF: https://github.com/pyscf/semiempirical
 #---------------------------------------------------
 sparrow: https://github.com/qcscine/sparrow
