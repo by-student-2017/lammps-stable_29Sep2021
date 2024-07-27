@@ -25,7 +25,7 @@ atom_modify     sort 0 0.0 map yes
 variable Tini equal 273+28.0 # [K] (Initial temperature)
 variable Tfin equal 273+28.0 # [K] (Annealing temperature)
 
-variable Nout equal  100 # every 10 time steps to the specified file
+variable Nout equal  100 # every 100 time steps to the specified file
 
 variable tdump equal  20 # dumping factor
 
