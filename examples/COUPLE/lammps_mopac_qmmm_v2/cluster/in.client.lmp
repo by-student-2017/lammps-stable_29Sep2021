@@ -115,7 +115,7 @@ minimize 1.0e-4 1.0e-6 $(50+v_Nh2o/2) 1000
 reset_timestep 0
 
 # Since the calculation is performed with one SCF, the time step must be reduced by the number of original SCFs.
-timestep        $(0.001*0.01) # 0.01 [fs]
+timestep        $(0.001*0.01*20.0) # 0.01 [fs]
 
 fix rigid water shake 0.0001 20 0 b 1 a 1
 
