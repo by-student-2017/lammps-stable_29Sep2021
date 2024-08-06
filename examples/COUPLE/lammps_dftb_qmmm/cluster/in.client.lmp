@@ -26,7 +26,7 @@ variable Tini equal 273+25.0 # [K] (Initial temperature)
 variable Tfin equal 273+25.0 # [K] (Annealing temperature)
 
 variable Nout equal  10 # every 10 time steps to the specified file
-variable Nh2o equal  50 # set the number of waters (Due to minimize settings, an even number is required)
+variable Nh2o equal  40 # set the number of waters (Due to minimize settings, an even number is required)
 
 variable tdump equal 40 # dumping factor
 
@@ -69,11 +69,13 @@ pair_coeff 3 4 lj/cut $(0.00008617*(22.14*78.15)^(1/2)) $(10*(0.257+0.3166)/2) #
 #-------------------------------------------------------------------
 # not shake
 
+variable kfactor equal 1.0
+
 bond_style harmonic
-bond_coeff 1 $(80.0*0.04336125) 1.0 # the r0 of O-H bond [Angstrom]
+bond_coeff 1 $(80.0*0.04336125*v_kfactor) 1.0 # the r0 of O-H bond [Angstrom]
 
 angle_style harmonic
-angle_coeff 1 $(300.0*0.04336125) 109.47 # the theta0 of H-O-H angle [degree]
+angle_coeff 1 $(300.0*0.04336125*v_kfactor) 109.47 # the theta0 of H-O-H angle [degree]
 
 #-------------------------------------------------------------------
 # shake method # failed
@@ -114,8 +116,14 @@ fix_modify      f2 energy yes # or 2 virial yes
 #fix             f3 all temp/berendsen ${Tini} ${Tfin} $(v_tdump*dt)
 #fix             f3 all langevin ${Tini} ${Tfin} $(v_tdump*dt) 12345
 
-#-------------------- Energy minimization ------------------------------------------------
-minimize 1.0e-4 1.0e-6 $(50+v_Nh2o/2) 1000
+#-------------------- Energy Minimization ------------------------------------------------
+# 0 [K], structure optimization
+#fix             emin all box/relax iso 0.0 # for boundary p p p
+min_style       cg
+min_modify      dmax 0.2
+min_modify      line quadratic
+minimize        0.0 1.0e-8 100 1000
+#unfix           emin # for boundary p p p
 
 #-------------------- Run the simulation -------------------------------------------------
 reset_timestep 0
