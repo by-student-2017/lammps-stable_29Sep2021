@@ -87,6 +87,9 @@ create_atoms 0 random ${Nh2o} 12345 box mol water 1
 
 #mass 3 2.00 # H => D (Make the hydrogen heavier to increase the timestep)
 
+# Note that for BOP potentials with hydrogen, you will likely want to set the mass of H atoms to be 10x or 20x larger to avoid having to use a tiny timestep. 
+mass 3 20.0 # Here we will do the same for the MOPAC parameters.
+
 group main  id <= 21 # e.g., use dump settings
 group water id >= 22
 
