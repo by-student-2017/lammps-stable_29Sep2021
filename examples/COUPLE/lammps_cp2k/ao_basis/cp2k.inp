@@ -43,8 +43,8 @@
           SK_FILE H O  H-O.skf
           SK_FILE H H  H-H.skf
         &END PARAMETER
-        
       &END DFTB
+      
     &END QS
     
     &PRINT
