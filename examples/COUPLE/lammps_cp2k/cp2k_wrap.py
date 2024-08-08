@@ -68,17 +68,11 @@ def nwchem_setup_ao(input):
   geometry_block = False
   natoms = 0
 
-  while True:
-    line = template.readline()
-    if not line: break
+  line = template.readline()
+  natoms = int(line.split()[0])
 
-    if geometry_block and re.search("end",line):
-      geometry_block = False
-    if geometry_block and not re.match("#",line) :
-      natoms += 1
-    if re.search("geometry",line):
-      geometry_block = True
-
+  #print(natoms)
+  
   return natoms
 
 # -------------------------------------
@@ -88,36 +82,28 @@ def nwchem_setup_ao(input):
 def nwchem_input_write_ao(input,coords):
 
   template = open(input,'r')
-  new_input = open("nwchem_lammps.nw",'w')
-
-  geometry_block = False
-  i = 0
+  new_input = open("cp2k.xyz",'w')
+  ixyz = 0
+  j = 0
 
   while True:
     line = template.readline()
     if not line: break
 
-    if geometry_block and not re.match("#",line) and re.search("end",line):
-      geometry_block = False
-      if os.path.exists("nwchem_lammps.movecs"):
-        # The below is hacky, but one of these lines will be ignored
-        # by NWChem depending on if the input file is for scf/dft.
-        append = "\nscf\n vectors input nwchem_lammps.movecs\nend\n"
-        append2 = "\ndft\n vectors input nwchem_lammps.movecs\nend\n"
-        line = line + append + append2
-
-    if geometry_block and not re.match("#",line):
-      x = coords[3*i+0]
-      y = coords[3*i+1]
-      z = coords[3*i+2]
+    ixyz += 1
+    if ixyz == 1:
+      pass
+      natoms = line.split()[0]
+    if ixyz == 2:
+      pass
+    if ixyz >= 3:
+      x = coords[3*j+0]
+      y = coords[3*j+1]
+      z = coords[3*j+2]
       coord_string = "  %g %g %g \n" % (x,y,z)
       atom_string = line.split()[0]
       line = atom_string + coord_string
-      i += 1
-
-    if (not re.match("#",line)) and re.search("geometry",line):
-      geometry_block = True
-      line = "geometry units angstrom noautosym nocenter\n"
+      j += 1
 
     print(line,file=new_input,end='')
 
@@ -127,47 +113,68 @@ def nwchem_input_write_ao(input,coords):
 # read a NWChem output nwchem_lammps.out file
 
 def nwchem_read_ao(natoms, log):
-
-  nwchem_output = open(log, 'r')
-  energy_pattern = r"Total \w+ energy"
-  gradient_pattern = "x          y          z           x          y          z"
-  charge_pattern = "Mulliken analysis of the total density"
+  cp2k_output = open(log, 'r')
 
   eout = 0.0
   fout = []
+  reading_forces = False
   qout = []
+  reading_charges = False
+  reading_charges_flag = False
+  forces_pattern = r"^\s*\d+\s+\d+\s*\w{1,2}(?:\s+-?(?:\d+.?\d*|\d*.?\d+)){3}"
 
-  while True:
-    line = nwchem_output.readline()
-    if not line: break
+  lines = cp2k_output.readlines()
+  
+  start_index = None
+  for i, line in enumerate(reversed(lines)):
+    #if ' TOTAL NUMBERS AND MAXIMUM NUMBERS' in line:
+    if re.search("TOTAL NUMBERS AND MAXIMUM NUMBERS", line):
+      start_index = len(lines) - i - 1
+      #print(start_index)
+      break
 
-    # pattern match for energy
-    if re.search(energy_pattern,line):
-      eout = float(line.split()[4])
+  if start_index is not None:
+    for line in lines[start_index:]:
+      if not line: break
+      #print(line)
 
-    # pattern match for forces
-    if re.search(gradient_pattern, line):
-      for i in range(natoms):
-        line = nwchem_output.readline()
+      # pattern match for energy
+      #eunitconv=1.0/0.367493245336341E-01
+      if re.search("Total energy:",line):
+        eout = float(line.split()[2])
+
+      # pattern match for forces
+      #funitconv=1.0/0.194469064593167E-01
+      if re.search("SUM OF ATOMIC FORCES", line):
+        reading_forces = False
+      if reading_forces and not re.match("#",line) and re.search(forces_pattern,line):
         forces = line.split()
-        fout += [float(forces[5]), float(forces[6]), float(forces[7])]
-        
-    # pattern match for charges
-    if re.search(charge_pattern, line):
-      line = nwchem_output.readline()
-      line = nwchem_output.readline()
-      line = nwchem_output.readline()
-      line = nwchem_output.readline()
-      for i in range(natoms):
-        line = nwchem_output.readline()
+        fout += [float(forces[3]), float(forces[4]), float(forces[5])]
+      if re.search("ATOMIC FORCES in \[a.u.\]",line):
+        reading_forces = True
+
+      # pattern match for charges
+      if re.search("# Total charge", line):
+        reading_charges = False
+        reading_charges_flag = False
+      if reading_charges and reading_charges_flag:
         charges = line.split()
-        qout += [float(charges[2])-float(charges[3])]
+        #qout += [float(charges[2]), float(charges[3]), float(charges[4])]
+        qout += [float(charges[4])]
+      if re.search("Mulliken Population Analysis",line):
+        reading_charges = True
+      if re.search("Net charge",line):
+        reading_charges_flag = True
 
   # convert units
-  hartree2eV = 27.21138602
-  bohr2angstrom = 0.52917721092
+  hartree2eV    = 27.21138602   # a.u. = Ha = 2 Ry = 2*13.602 eV
+  bohr2angstrom = 0.52917721092 # 
   eout = eout * hartree2eV
-  fout = [i * -hartree2eV/bohr2angstrom for i in fout]
+  fout = [i * hartree2eV/bohr2angstrom for i in fout]
+
+  #print(eout)
+  #print(fout)
+  #print(qout)
 
   return eout,fout,qout
 

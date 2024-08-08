@@ -1,0 +1,32 @@
+# H2O with NWChem 
+
+variable        mode index file
+ 
+if "${mode} == file" then &
+  "message client md file tmp.couple" &
+elif "${mode} == zmq" &
+  "message client md zmq localhost:5555" &
+# Note: General Web (localhost:80), Secure HTTPS (localhost:443), Develop. XAMPP (localhost:8888), Develop. Web (localhost:5555)
+
+units           metal
+atom_style      charge
+atom_modify     sort 0 0.0 map yes
+
+boundary        m m m
+read_data       data.lammps
+
+velocity        all create 300.0 87287 loop geom
+
+#neighbor        0.3 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
+#neigh_modify    delay 0 every 10 check no
+comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
+
+fix             1 all nve
+fix             2 all client/md
+fix_modify      2 energy yes
+
+dump            d1 all cfg 1 cfg/run.*.cfg mass type xs ys zs id type q
+dump_modify     d1 element O H
+
+thermo          1
+run             10

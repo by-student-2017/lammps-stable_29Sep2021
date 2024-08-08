@@ -1,0 +1,59 @@
+&GLOBAL
+  PROJECT H2O
+  RUN_TYPE ENERGY_FORCE
+  PRINT_LEVEL LOW
+&END GLOBAL
+
+&FORCE_EVAL
+  METHOD Quickstep              ! Electronic structure method (DFT,...)
+  &DFT
+    BASIS_SET_FILE_NAME  BASIS_MOLOPT
+    POTENTIAL_FILE_NAME  POTENTIAL
+
+    &POISSON                    ! Solver requested for non periodic calculations
+      PERIODIC NONE
+      PSOLVER  WAVELET          ! Type of solver
+    &END POISSON
+    &SCF                        ! Parameters controlling the convergence of the scf. This section should not be changed. 
+      SCF_GUESS ATOMIC
+      EPS_SCF 1.0E-6
+      MAX_SCF 300
+    &END SCF
+    &XC                        ! Parameters needed to compute the electronic exchange potential 
+      &XC_FUNCTIONAL PBE
+      &END XC_FUNCTIONAL
+    &END XC
+    &PRINT
+      &MULLIKEN ON
+      &END MULLIKEN
+    &END PRINT
+  &END DFT
+
+  &SUBSYS
+    &CELL
+      ABC 10 10 10
+      PERIODIC NONE              ! Non periodic calculations. That's why the POISSON section is needed 
+    &END CELL
+    &TOPOLOGY                    ! Section used to center the atomic coordinates in the given box. Useful for big molecules
+      &CENTER_COORDINATES
+      &END
+      COORD_FILE_FORMAT xyz
+      COORD_FILE_NAME  ./cp2k.xyz
+    &END
+    &KIND H
+      ELEMENT H
+      BASIS_SET DZVP-MOLOPT-GTH
+      POTENTIAL GTH-PBE-q1
+    &END KIND
+    &KIND O
+      ELEMENT O
+      BASIS_SET DZVP-MOLOPT-GTH
+      POTENTIAL GTH-PBE-q6
+    &END KIND
+  &END SUBSYS
+  
+  &PRINT
+    &FORCES ON
+    &END FORCES
+  &END PRINT
+&END FORCE_EVAL
