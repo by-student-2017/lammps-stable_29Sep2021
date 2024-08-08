@@ -19,10 +19,16 @@
       EPS_SCF 1.0E-6
       MAX_SCF 300
     &END SCF
-    &XC                        ! Parameters needed to compute the electronic exchange potential 
-      &XC_FUNCTIONAL PBE
-      &END XC_FUNCTIONAL
-    &END XC
+    
+    !&XC                        ! Parameters needed to compute the electronic exchange potential 
+    !  &XC_FUNCTIONAL PBE
+    !  &END XC_FUNCTIONAL
+    !&END XC
+    
+    &QS
+      METHOD XTB ! AM1, PM3, PM6, PM6-FM, PDG, RM1, PNNL, XTB, GPW, LRIGPW, RIGPW, OFGPW
+    &END QS
+    
     &PRINT
       &MULLIKEN ON
       &END MULLIKEN
@@ -40,16 +46,19 @@
       COORD_FILE_FORMAT xyz
       COORD_FILE_NAME  ./cp2k.xyz
     &END
-    &KIND H
-      ELEMENT H
-      BASIS_SET DZVP-MOLOPT-GTH
-      POTENTIAL GTH-PBE-q1
-    &END KIND
-    &KIND O
-      ELEMENT O
-      BASIS_SET DZVP-MOLOPT-GTH
-      POTENTIAL GTH-PBE-q6
-    &END KIND
+    
+    ! &XC,  &QS GPW, &QS OFGPW
+    !&KIND H
+    !  ELEMENT H
+    !  BASIS_SET DZVP-MOLOPT-GTH
+    !  POTENTIAL GTH-PBE-q1
+    !&END KIND
+    !&KIND O
+    !  ELEMENT O
+    !  BASIS_SET DZVP-MOLOPT-GTH
+    !  POTENTIAL GTH-PBE-q6
+    !&END KIND
+    
   &END SUBSYS
   
   &PRINT
