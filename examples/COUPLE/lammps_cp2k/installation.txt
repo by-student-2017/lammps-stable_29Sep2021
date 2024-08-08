@@ -47,7 +47,7 @@ D drive = "/mnt/d". Usually "/mnt/d" => "$HOME" or "~"
 1. cd /mnt/d/lammps-stable_29Sep2021/examples/COUPLE/lammps_nwchem/ao_basis
 2. mkdir cfg
 3. export OMP_NUM_THREADS=1
-4. mpirun -np 1 /mnt/d/lammps-stable_29Sep2021/src/lmp_mpi -v mode file -in in.client.lmp & python2 ./../cp2k_wrap.py file ao cp2k_tmp.inp &
+4. mpirun -np 1 /mnt/d/lammps-stable_29Sep2021/src/lmp_mpi -v mode file -in in.client.lmp & python2 ./../cp2k_wrap.py file ao cp2k_tmp.xyz &
 5. (use kill command)
 #------------------------------------------
 
@@ -85,7 +85,7 @@ D drive = "/mnt/d". Usually "/mnt/d" => "$HOME" or "~"
 1. cd /mnt/d/lammps-stable_29Sep2021/examples/COUPLE/lammps_nwchem/ao_basis
 2. mkdir cfg
 3. export OMP_NUM_THREADS=1
-4. mpirun -np 1 /mnt/d/lammps-stable_29Sep2021/src/lmp_mpi -v mode zmq -in in.client.lmp & python2 ./../cp2k_wrap.py zmq ao cp2k_tmp.inp &
+4. mpirun -np 1 /mnt/d/lammps-stable_29Sep2021/src/lmp_mpi -v mode zmq -in in.client.lmp & python2 ./../cp2k_wrap.py zmq ao cp2k_tmp.xyz &
 5. (use kill command)
 #------------------------------------------
 
