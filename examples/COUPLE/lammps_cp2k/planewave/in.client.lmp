@@ -1,0 +1,65 @@
+#-----------------------------------------------------------------------------------------
+# Si diamond unit cell for use with CP2k
+# test: lammps-stable_29Sep2021
+#-------------------- Initialization -----------------------------------------------------
+clear
+echo            both    # echoes each input script command to both log file and screen
+#package         omp 1   # of OpenMP threads: export OMP_NUM_THREADS=16 (need: yes-OPENMP)
+#-----------------------------------------------------------------------------------------
+variable        mode index file
+ 
+if "${mode} == file" then &
+  "message client md file tmp.couple" &
+elif "${mode} == zmq" &
+  "message client md zmq localhost:5555" &
+
+# Note: General Web (localhost:80), Secure HTTPS (localhost:443), Develop. XAMPP (localhost:8888), Develop. Web (localhost:5555)
+#-----------------------------------------------------------------------------------------
+units           metal
+dimension       3
+boundary        p p p
+atom_style      charge
+atom_modify     sort 0 0.0 map yes
+
+#-----------------------------------------------------------------------------------------
+variable Tini equal 273+25.0 # [K] (Initial temperature)
+variable Tfin equal 273+25.0 # [K] (Annealing temperature)
+
+variable tdump equal 50 # dumping factor
+
+variable elem string "Si"
+
+#-------------------- Atom & Lattice description ----------------------------------------
+read_data       data.lammps
+
+mass            1 28.09 # Si
+
+neighbor        2.0 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
+neigh_modify    delay 0 every 10 check no
+comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
+
+#-------------------- Energy minimization ------------------------------------------------
+minimize 1.0e-4 1.0e-6 1000 1000
+
+#-------------------- Settings -----------------------------------------------------------
+reset_timestep 0
+
+timestep        $(0.001*0.25) # 0.25 [fs]
+
+thermo          1
+thermo_style    one
+#thermo_style    multi
+
+dump            d1 all cfg 1 cfg/run.*.cfg mass type xs ys zs id type q
+dump_modify     d1 element ${elem}
+
+velocity        all create ${Tini} 123456 loop geom
+
+fix             1 all nve
+fix             2 all client/md
+fix_modify      2 energy yes
+
+#-------------------- Run the simulation -------------------------------------------------
+run             10
+
+#-------------------- End ----------------------------------------------------------------

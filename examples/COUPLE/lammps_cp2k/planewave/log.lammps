@@ -1,0 +1,151 @@
+LAMMPS (29 Sep 2021)
+#-----------------------------------------------------------------------------------------
+# Si diamond unit cell for use with CP2k
+# test: lammps-stable_29Sep2021
+#-------------------- Initialization -----------------------------------------------------
+clear
+echo            both    # echoes each input script command to both log file and screen
+#package         omp 1   # of OpenMP threads: export OMP_NUM_THREADS=16 (need: yes-OPENMP)
+#-----------------------------------------------------------------------------------------
+variable        mode index file
+
+if "${mode} == file" then   "message client md file tmp.couple" elif "${mode} == zmq"   "message client md zmq localhost:5555"
+message client md file tmp.couple
+# Note: General Web (localhost:80), Secure HTTPS (localhost:443), Develop. XAMPP (localhost:8888), Develop. Web (localhost:5555)
+#-----------------------------------------------------------------------------------------
+units           metal
+dimension       3
+boundary        p p p
+atom_style      charge
+atom_modify     sort 0 0.0 map yes
+
+#-----------------------------------------------------------------------------------------
+variable Tini equal 273+25.0 # [K] (Initial temperature)
+variable Tfin equal 273+25.0 # [K] (Annealing temperature)
+
+variable tdump equal 50 # dumping factor
+
+variable elem string "Si"
+
+#-------------------- Atom & Lattice description ----------------------------------------
+read_data       data.lammps
+Reading data file ...
+  orthogonal box = (0.0000000 0.0000000 0.0000000) to (5.4306975 5.4306975 5.4306975)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  8 atoms
+  read_data CPU = 0.006 seconds
+
+mass            1 28.09 # Si
+
+neighbor        2.0 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
+neigh_modify    delay 0 every 10 check no
+comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
+
+#-------------------- Energy minimization ------------------------------------------------
+minimize 1.0e-4 1.0e-6 1000 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (../min.cpp:188)
+Per MPI rank memory allocation (min/avg/max) = 3.551 | 3.551 | 3.551 Mbytes
+Step Temp E_pair E_mol TotEng Press 
+       0            0            0            0            0            0 
+       1            0            0            0            0            0 
+Loop time of 0.00321424 on 1 procs for 1 steps with 8 atoms
+
+0.0% CPU use with 1 MPI tasks x no OpenMP threads
+
+Minimization stats:
+  Stopping criterion = search direction is not downhill
+  Energy initial, next-to-last, final = 
+                     0                  0                  0
+  Force two-norm initial, final = 0.0000000 0.0000000
+  Force max component initial, final = 0.0000000 0.0000000
+  Final line search alpha, max atom move = 0.0000000 0.0000000
+  Iterations, force evaluations = 1 0
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 1.429e-06  | 1.429e-06  | 1.429e-06  |   0.0 |  0.04
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.003213   |            |       | 99.96
+
+Nlocal:        8.00000 ave           8 max           8 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        38.0000 ave          38 max          38 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:         0.00000 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0.0000000
+Neighbor list builds = 0
+Dangerous builds not checked
+
+#-------------------- Settings -----------------------------------------------------------
+reset_timestep 0
+
+timestep        $(0.001*0.25) # 0.25 [fs]
+timestep        0.0002500000000000000052 
+
+thermo          1
+thermo_style    one
+#thermo_style    multi
+
+dump            d1 all cfg 1 cfg/run.*.cfg mass type xs ys zs id type q
+dump_modify     d1 element ${elem}
+dump_modify     d1 element Si
+
+velocity        all create ${Tini} 123456 loop geom
+velocity        all create 298 123456 loop geom
+
+fix             1 all nve
+fix             2 all client/md
+fix_modify      2 energy yes
+
+#-------------------- Run the simulation -------------------------------------------------
+run             10
+Per MPI rank memory allocation (min/avg/max) = 3.176 | 3.176 | 3.176 Mbytes
+Step Temp E_pair E_mol TotEng Press 
+       0          298            0            0   -851.38921    79560.681 
+       1    297.93816            0            0   -851.38921    79558.272 
+       2     297.7537            0            0   -851.38921    79550.966 
+       3    297.44729            0            0   -851.38921    79538.848 
+       4    297.01981            0            0   -851.38921    79521.882 
+       5    296.47291            0            0   -851.38921    79500.085 
+       6    295.80863            0            0   -851.38921    79473.503 
+       7    295.02982            0            0   -851.38921    79442.012 
+       8    294.13932            0            0   -851.38921    79405.912 
+       9    293.14012            0            0   -851.38921    79364.934 
+      10    292.03607            0            0   -851.38921    79319.099 
+Loop time of 60.2755 on 1 procs for 10 steps with 8 atoms
+
+Performance: 0.004 ns/day, 6697.279 hours/ns, 0.166 timesteps/s
+0.0% CPU use with 1 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 3.29e-07   | 3.29e-07   | 3.29e-07   |   0.0 |  0.00
+Comm    | 2.4658e-05 | 2.4658e-05 | 2.4658e-05 |   0.0 |  0.00
+Output  | 0.01727    | 0.01727    | 0.01727    |   0.0 |  0.03
+Modify  | 60.258     | 60.258     | 60.258     |   0.0 | 99.97
+Other   |            | 2.887e-05  |            |       |  0.00
+
+Nlocal:        8.00000 ave           8 max           8 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        38.0000 ave          38 max          38 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:         0.00000 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0.0000000
+Neighbor list builds = 1
+Dangerous builds not checked
+
+#-------------------- End ----------------------------------------------------------------
+Total wall time: 0:01:05
