@@ -12,6 +12,8 @@ D drive = "/mnt/d". Usually "/mnt/d" => "$HOME" or "~"
 2. sudo apt -y install cp2k
 3. which cp2k
 (/usr/bin/cp2k)
+4. cp2k -v
+(CP2K version 9.1)
 
 ## Use file (No ZMQ)
 #------------------------------------------
