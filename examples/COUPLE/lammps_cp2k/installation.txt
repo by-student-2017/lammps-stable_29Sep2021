@@ -107,4 +107,5 @@ DFTB+: v.23.1
 # Further improvements will be left to other users.
 #---------------------------------------------------------------------
 CP2k: https://www.cp2k.org/exercises
+QM/MM: https://www.cp2k.org/exercises:2015_uzh_molsim:index
 #---------------------------------------------------------------------
