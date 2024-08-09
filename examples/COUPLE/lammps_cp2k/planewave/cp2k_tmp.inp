@@ -17,7 +17,7 @@
     
     &QS
       EPS_DEFAULT 1.0E-10
-      METHOD GPW ! GPW, LRIGPW, RIGPW, OFGPW
+      METHOD GPW ! GAPW, GPW, LRIGPW, RIGPW, OFGPW
     &END QS
     
     &MGRID
