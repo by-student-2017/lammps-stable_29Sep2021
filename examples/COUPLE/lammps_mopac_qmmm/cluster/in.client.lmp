@@ -26,17 +26,14 @@ variable Tini equal 273+25.0 # [K] (Initial temperature)
 variable Tfin equal 273+25.0 # [K] (Annealing temperature)
 
 variable Nout equal  10 # every 10 time steps to the specified file
-#variable Nh2o equal  30 # set the number of waters (Due to minimize settings, an even number is required)
+variable Nh2o equal  30 # set the number of waters (Due to minimize settings, an even number is required)
 
 variable tdump equal 50 # dumping factor
 
 variable elem string "C O H Ow Hw"
 
 #-------------------- Atom & Lattice description ----------------------------------------
-bond_style harmonic
-angle_style harmonic
-read_data data_in_water.lammps
-#read_data data.lammps extra/bond/per/atom 2 extra/angle/per/atom 1 extra/special/per/atom 2
+read_data data.lammps extra/bond/per/atom 2 extra/angle/per/atom 1 extra/special/per/atom 2
 # extra for H2O
 
 #-------------------- pair style settings --------------------------------
@@ -71,11 +68,11 @@ pair_coeff 3 4 lj/cut $((0.00008617*22.14 * 0.1553*0.04336125)^(1/2)) $(10*(0.25
 #-------------------------------------------------------------------
 # shake method
 
-#bond_style zero
-#bond_coeff 1 1.0
+bond_style zero
+bond_coeff 1 1.0
 
-#angle_style zero
-#angle_coeff 1 109.47
+angle_style zero
+angle_coeff 1 109.47
 #-------------------------------------------------------------------
 
 #region box block INF INF  INF INF  INF INF
@@ -108,8 +105,7 @@ fix_modify      f2 energy yes # or 2 virial yes
 #fix             f3 all langevin ${Tini} ${Tfin} $(v_tdump*dt) 12345
 
 #-------------------- Energy minimization ------------------------------------------------
-#minimize 1.0e-4 1.0e-6 $(50+v_Nh2o/2) 1000
-minimize 1.0e-4 1.0e-6 100 100
+minimize 1.0e-4 1.0e-6 $(50+v_Nh2o/2) 1000
 
 #-------------------- Run the simulation -------------------------------------------------
 reset_timestep 0
@@ -121,7 +117,7 @@ variable nSCF equal 1
 # Since the calculation is performed with one SCF, the time step must be reduced by the number of original SCFs.
 timestep        $(0.001*1.0/v_nSCF) # 1.0/nSCF [fs]
 
-#fix rigid water shake 0.0001 10 0 b 1 a 1
+fix rigid water shake 0.0001 10 0 b 1 a 1
 
 # Equilibrium system, calculation settings
 fix integrate all nvt temp ${Tini} ${Tfin} $(v_tdump*dt)
