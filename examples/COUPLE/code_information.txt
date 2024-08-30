@@ -33,7 +33,7 @@ QM/MM: https://doi.org/10.1002/wcms.1163 (Open Access)
 #---------------------------------------------------
 
 #---------------------------------------------------
-Force
+Force (Note that the signs of the forces and stresses in the output files for each code may differ from those in lammps.)
 DFTB+: +
 MOPAC: -
 #---------------------------------------------------
