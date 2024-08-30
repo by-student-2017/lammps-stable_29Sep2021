@@ -399,6 +399,7 @@ while 1:
     zj = coords[3*j+2]
     qj = lmp_charges[j]
     #-----------------------------------------------------
+    r2 = 0.0
     fcq = 0.0
     fxj = 0.0
     fyj = 0.0
@@ -409,8 +410,8 @@ while 1:
       zi = coords[3*i+2]
       #qi = lmp_charges[i]
       qi = charges[i]
-      r = ((xi-xj)**2+(yi-yj)**2+(zi-zj)**2)**0.5
-      fcq = funitconv*(coulomb_constants*qi*qj/(r**2)) # F = -dE/dr
+      r2 = ((xi-xj)**2+(yi-yj)**2+(zi-zj)**2)
+      fcq = funitconv*(coulomb_constants*qi*qj/r2) # F = -dE/dr
       fxj += fcq*( (xi-xj)/r ) # eV/Angstrom
       fyj += fcq*( (yi-yj)/r ) # eV/Angstrom
       fzj += fcq*( (zi-zj)/r ) # eV/Angstrom
