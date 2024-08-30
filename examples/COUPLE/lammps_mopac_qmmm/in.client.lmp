@@ -1,0 +1,136 @@
+#-----------------------------------------------------------------------------------------
+# The one molecule in water for use with DFTB+
+# test: lammps-stable_29Sep2021
+#-------------------- Initialization -----------------------------------------------------
+clear
+echo            both    # echoes each input script command to both log file and screen
+#package         omp 1   # of OpenMP threads: export OMP_NUM_THREADS=16 (need: yes-OPENMP)
+#-----------------------------------------------------------------------------------------
+variable        mode index file
+ 
+if "${mode} == file" then &
+  "message client md file tmp.couple" &
+elif "${mode} == zmq" &
+  "message client md zmq localhost:8888" &
+
+# Note: General Web (localhost:80), Secure HTTPS (localhost:443), Develop. XAMPP (localhost:8888), Develop. Web (localhost:5555)
+#-----------------------------------------------------------------------------------------
+units           metal
+dimension       3
+boundary        m m m
+atom_style      full  # yes-MOLECULE
+atom_modify     sort 0 0.0 map yes
+
+#-----------------------------------------------------------------------------------------
+variable Tini equal 273+25.0 # [K] (Initial temperature)
+variable Tfin equal 273+25.0 # [K] (Annealing temperature)
+
+variable Nout equal  10 # every 10 time steps to the specified file
+variable Nh2o equal  10 # set the number of waters (Due to minimize settings, an even number is required)
+
+variable tdump equal 50 # dumping factor
+
+variable elem string "C O H Ow Hw"
+
+#-------------------- Atom & Lattice description ----------------------------------------
+read_data data.lammps extra/bond/per/atom 2 extra/angle/per/atom 1 extra/special/per/atom 2
+# extra for H2O
+
+#-------------------- pair style settings --------------------------------
+pair_style hybrid/overlay zero 1.0 lj/cut 10.0 coul/cut 10.0
+pair_coeff * * zero 1.0
+
+#-----------------------------------------------------------------------------------
+# water-water
+pair_coeff 4 4 lj/cut $(0.1553*0.04336125) 3.166 # O-O
+pair_coeff 4 5 lj/cut 0.0 1.0 # O-H
+pair_coeff 5 5 lj/cut 0.0 1.0 # H-H
+pair_coeff 4*5 4*5 coul/cut
+#-----------------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------------
+# main(UFF)-water(SPC/E)
+#-----------------------------------------------------------------------------------
+pair_coeff 1 4 lj/cut $((0.00008617*52.84 * 0.1553*0.04336125)^(1/2)) $(10*(0.343+0.312)/2) # C-O
+pair_coeff 2 4 lj/cut $((0.00008617*30.20 * 0.1553*0.04336125)^(1/2)) $(10*(0.312+0.312)/2) # O-O
+pair_coeff 3 4 lj/cut $((0.00008617*22.14 * 0.1553*0.04336125)^(1/2)) $(10*(0.257+0.312)/2) # H-O
+#-----------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------
+# not shake
+
+#bond_style harmonic
+#bond_coeff 1 $(80.0*0.04336125) 1.0 # the r0 of O-H bond [Angstrom]
+
+#angle_style harmonic
+#angle_coeff 1 $(300.0*0.04336125) 109.47 # the theta0 of H-O-H angle [degree]
+
+#-------------------------------------------------------------------
+# shake method
+
+bond_style zero
+bond_coeff 1 1.0
+
+angle_style zero
+angle_coeff 1 109.47
+#-------------------------------------------------------------------
+
+region box block INF INF  INF INF  INF INF
+molecule water spce.mol # yes-RIGID
+create_atoms 0 random ${Nh2o} 12345 box mol water 1
+
+#-------------------- Settings -----------------------------------------------------------
+
+#mass 3 2.00 # H => D (Make the hydrogen heavier to increase the timestep)
+
+# Note that for BOP potentials with hydrogen, you will likely want to set the mass of H atoms to be 10x or 20x larger to avoid having to use a tiny timestep. 
+#mass 3 20.0 # Here we will do the same for the MOPAC parameters.
+
+group main  id <= 21 # e.g., use dump settings
+group water id >= 22
+
+neighbor        2.0 bin # 0.3 is lj unit. 2.0 [Angstrom] is metal or real units
+neigh_modify    delay 0 every 10 check no
+comm_modify cutoff 2.0 # = comm_modify mode single group all cutoff 2.0 vel yes
+
+thermo          ${Nout} # computes and prints thermodynamic 
+thermo_style custom step temp pe etotal ecoul vol density # specifies content of thermodynamic data to be printed in screen
+
+velocity        all create ${Tini} 123456 loop geom # sets the velocity of a group of atoms
+
+#fix             f1 all nve
+fix             f2 all client/md
+fix_modify      f2 energy yes # or 2 virial yes
+#fix             f3 all temp/berendsen ${Tini} ${Tfin} $(v_tdump*dt)
+#fix             f3 all langevin ${Tini} ${Tfin} $(v_tdump*dt) 12345
+
+#-------------------- Energy minimization ------------------------------------------------
+minimize 1.0e-4 1.0e-6 $(50+v_Nh2o/2) 1000
+
+#-------------------- Run the simulation -------------------------------------------------
+reset_timestep 0
+
+# Set the number of SCFs for symmetrical cases to be calculated by MOPAC at least on average.
+# Or set it to the maximum expected number of SCFs if you want to run it safely even if it takes a long time.
+variable nSCF equal 1
+
+# Since the calculation is performed with one SCF, the time step must be reduced by the number of original SCFs.
+timestep        $(0.001*1.0/v_nSCF) # 1.0/nSCF [fs]
+
+fix rigid water shake 0.0001 10 0 b 1 a 1
+
+# Equilibrium system, calculation settings
+fix integrate all nvt temp ${Tini} ${Tfin} $(v_tdump*dt)
+#fix integrate all npt temp ${Tini} ${Tfin} $(v_tdump*dt) iso 1.0 1.0 $(v_tdump*10*dt)
+
+#-------------------- 
+dump            d1 all cfg ${Nout} cfg/run.*.cfg mass type xs ys zs id type q
+dump_modify     d1 element ${elem}
+#-------------------- 
+#dump            d2 main cfg ${Nout} cfg/run_main.*.cfg mass type xs ys zs id type q
+#dump_modify     d2 element ${elem}
+#-------------------- 
+
+run             $(v_nSCF*1000)
+
+#-------------------- End ----------------------------------------------------------------
