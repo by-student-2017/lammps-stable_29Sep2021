@@ -185,6 +185,9 @@ def vasprun_read():
   sout = []
   stensor = []
 
+  eout = 0.0
+  r = 0.0
+  
   eunitconv=0.159466838598749E-02/0.367493245336341e-01 # kcal/mol to eV
   funitconv=0.159466838598749E-02/0.367493245336341e-01 # kcal/mol/Angstrom to eV/Angstrom
   
@@ -222,7 +225,7 @@ def vasprun_read():
         break
       if start_reading:
         fxyz = line.strip().split()
-        fxyz = [float(value)*funitconv for value in fxyz]
+        fxyz = [-1.0*float(value)*funitconv for value in fxyz]
         fout += fxyz
       #else:
       if 'GRADIENTS' in line_list[0]:
@@ -421,9 +424,9 @@ while 1:
       qi = charges[i]
       r2 = ((xi-xj)**2+(yi-yj)**2+(zi-zj)**2)
       fcq = funitconv*(coulomb_constants*qi*qj/r2) # F = -dE/dr
-      fxj += -fcq*( (xi-xj)/r ) # eV/Angstrom
-      fyj += -fcq*( (yi-yj)/r ) # eV/Angstrom
-      fzj += -fcq*( (zi-zj)/r ) # eV/Angstrom
+      fxj += -fcq*( (xi-xj)/r2 ) # eV/Angstrom
+      fyj += -fcq*( (yi-yj)/r2 ) # eV/Angstrom
+      fzj += -fcq*( (zi-zj)/r2 ) # eV/Angstrom
       #energy += funitconv*(coulomb_constants*qi*qj/r) # eV
       # the electron-electron part of Hartree-Fock equation
       # for i in range(nq):
