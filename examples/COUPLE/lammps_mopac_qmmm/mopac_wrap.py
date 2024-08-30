@@ -410,10 +410,10 @@ while 1:
       #qi = lmp_charges[i]
       qi = charges[i]
       r = ((xi-xj)**2+(yi-yj)**2+(zi-zj)**2)**0.5
-      fcq = funitconv*(coulomb_constants*qi*qj/(r**2))
-      fxj += -fcq*( (xi-xj)/r ) # eV/Angstrom
-      fyj += -fcq*( (yi-yj)/r ) # eV/Angstrom
-      fzj += -fcq*( (zi-zj)/r ) # eV/Angstrom
+      fcq = funitconv*(coulomb_constants*qi*qj/(r**2)) # F = -dE/dr
+      fxj += fcq*( (xi-xj)/r ) # eV/Angstrom
+      fyj += fcq*( (yi-yj)/r ) # eV/Angstrom
+      fzj += fcq*( (zi-zj)/r ) # eV/Angstrom
       #energy += funitconv*(coulomb_constants*qi*qj/r) # eV
       # the electron-electron part of Hartree-Fock equation
       # for i in range(nq):
