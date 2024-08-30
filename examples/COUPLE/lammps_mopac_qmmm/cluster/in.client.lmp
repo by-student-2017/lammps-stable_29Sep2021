@@ -75,9 +75,9 @@ angle_style zero
 angle_coeff 1 109.47
 #-------------------------------------------------------------------
 
-#region box block INF INF  INF INF  INF INF
-#molecule water spce.mol # yes-RIGID
-#create_atoms 0 random ${Nh2o} 12345 box mol water 1
+region box block INF INF  INF INF  INF INF
+molecule water spce.mol # yes-RIGID
+create_atoms 0 random ${Nh2o} 12345 box mol water 1
 
 #-------------------- Settings -----------------------------------------------------------
 
