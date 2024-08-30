@@ -214,7 +214,7 @@ def vasprun_read():
         break
       if start_reading:
         fxyz = line.strip().split()
-        fxyz = [float(value)*funitconv for value in fxyz]
+        fxyz = [-1.0*float(value)*funitconv for value in fxyz]
         fout += fxyz
       #else:
       if 'GRADIENTS' in line_list[0]:
