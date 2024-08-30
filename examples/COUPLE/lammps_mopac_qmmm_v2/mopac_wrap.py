@@ -393,6 +393,9 @@ while 1:
     
   energy,forces,virial,charges = vasprun_read()
   
+  for i in range(QMatoms,natoms):
+    charges += [float(lmp_charges[i])]
+  
   # coulomb interaction (forces and energies) of MM area from QM area
   #coulomb_constants = (1.602176634e-19)**2/(4*3.1415926*8.85418781e-12)/(1e-10) # Nm/q^2 = J/q^2
   #coulomb_constants = 2.30662e-18 / 1.60217663E-19 # J/q^2 to eV/q^2
@@ -405,6 +408,7 @@ while 1:
     zj = coords[3*j+2]
     qj = lmp_charges[j]
     #-----------------------------------------------------
+    r2 = 0.0
     fcq = 0.0
     fxj = 0.0
     fyj = 0.0
@@ -413,9 +417,10 @@ while 1:
       xi = coords[3*i+0]
       yi = coords[3*i+1]
       zi = coords[3*i+2]
-      qi = lmp_charges[i]
-      r = ((xi-xj)**2+(yi-yj)**2+(zi-zj)**2)**0.5
-      fcq = funitconv*(coulomb_constants*qi*qj/(r**2))
+      #qi = lmp_charges[i]
+      qi = charges[i]
+      r2 = ((xi-xj)**2+(yi-yj)**2+(zi-zj)**2)
+      fcq = funitconv*(coulomb_constants*qi*qj/r2) # F = -dE/dr
       fxj += -fcq*( (xi-xj)/r ) # eV/Angstrom
       fyj += -fcq*( (yi-yj)/r ) # eV/Angstrom
       fzj += -fcq*( (zi-zj)/r ) # eV/Angstrom
@@ -430,9 +435,6 @@ while 1:
       # Please correct me if I'm wrong.
     #-----------------------------------------------------
     forces += [fxj,fyj,fzj]
-  
-  for i in range(QMatoms,natoms):
-    charges += [float(lmp_charges[i])]
   
   # debag
   #print(forces)
