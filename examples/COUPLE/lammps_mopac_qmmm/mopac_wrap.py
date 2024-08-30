@@ -179,6 +179,7 @@ def vasprun_read():
   # detailed.out version
   #-------------------------------------------------------------------
 
+  eout = 0.0
   eunitconv=0.159466838598749E-02/0.367493245336341e-01 # kcal/mol to eV
   start_reading = False
   with open('in.aux', 'r') as file:
@@ -383,6 +384,9 @@ while 1:
     
   energy,forces,virial,charges = vasprun_read()
   
+  for i in range(QMatoms,natoms):
+    charges += [float(lmp_charges[i])]
+  
   # coulomb interaction (forces and energies) of MM area from QM area
   #coulomb_constants = (1.602176634e-19)**2/(4*3.1415926*8.85418781e-12)/(1e-10) # Nm/q^2 = J/q^2
   #coulomb_constants = 2.30662e-18 / 1.60217663E-19 # J/q^2 to eV/q^2
@@ -403,7 +407,8 @@ while 1:
       xi = coords[3*i+0]
       yi = coords[3*i+1]
       zi = coords[3*i+2]
-      qi = lmp_charges[i]
+      #qi = lmp_charges[i]
+      qi = charges[i]
       r = ((xi-xj)**2+(yi-yj)**2+(zi-zj)**2)**0.5
       fcq = funitconv*(coulomb_constants*qi*qj/(r**2))
       fxj += -fcq*( (xi-xj)/r ) # eV/Angstrom
@@ -420,9 +425,6 @@ while 1:
       # Please correct me if I'm wrong.
     #-----------------------------------------------------
     forces += [fxj,fyj,fzj]
-  
-  for i in range(QMatoms,natoms):
-    charges += [float(lmp_charges[i])]
   
   # debag
   #print(forces)
